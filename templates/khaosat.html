@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}
+    Khảo sát
+{% endblock %}
+{% block script %}
+    <script src="/static/khaosat.js"></script>
+{% endblock %}
+
+{% block nav %}
+    <li class="nav-item">
+    <a class="nav-link" href="/detai">Đề tài</a>
+   </li>
+   <li class="nav-item">
+    <a class="nav-link" href="/taocauhoi">Tạo câu hỏi</a>
+   </li>
+   <li class="nav-item">
+    <a class="nav-link active" aria-current="page" href="/khaosat">Khảo sát</a>
+   </li>
+   <li class="nav-item dropdown">
+    <a class="nav-link" href="/phantich">Phân tích</a>
+   </li>
+    {% endblock%}
+{% block content %}
+    <div id="content" class="container">
+      <div>
+        <h5>Thông tin khảo sát</h5>
+        <form method="POST" action="/insert_detai">
+            <table style="width: 100%">
+              <tr class="row">
+                <td class="col col-2">
+                  <label>Đề tài</label>
+                </td>
+                <td class="col col-10 mb-1">
+                  <select class="form-select" aria-label="Default select example" id="chon_detai" onchange="chon_de_tai()">
+                  </select>
+                </td>
+              </tr>
+              <tr class="row">
+                <td class="col col-2">
+                  <label>Người khảo sát</label>
+                </td>
+                <td class="col col-10">
+                    <input class="form-control mb-2" id="nguoi_khao_sat" type="text" disabled readonly>
+                </td>
+              </tr>
+              <tr class="row">
+                <td class="col col-2">
+                  <label>Ngày khảo sát</label>
+                </td>
+                <td class="col col-10">
+                    <input class="form-control mb-2" id="ngay_khao_sat" type="date" disabled readonly>
+                </td>
+              </tr>
+              <tr class="row">
+                <td class="col col-2">
+                  <label>Mô tả</label>
+                </td>
+                <td class="col col-10">
+                    <textarea class="form-control mb-2" id="mo_ta" name="mo_ta" style="height: 100px"></textarea>
+                </td>
+              </tr>
+            </table>
+
+        </form>
+
+              <!-- Hiện thị data grid -->
+        <div>
+          <h5>Câu hỏi khảo sát</h5>
+          <div class="row" style="height: 1000px">
+              <div class="col-3">
+                 <div id="button_nhom_cau_hoi"></div>
+              </div>
+              <div class="col-9">
+                <div id="hien_thi_cau_hoi"></div>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+        function myFunction2() {
+          // Declare variables
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput2");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("tableCauHoi");
+          tr = table.getElementsByTagName("tr");
+
+          // Loop through all table rows, and hide those who don't match the search query
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td");
+            for (j = 2; j < td.length; j++) {
+                if (td[j]) {
+                  txtValue = td[j].textContent || td[j].innerText;
+                  if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    break;
+                  } else {
+                    tr[i].style.display = "none";
+                  }
+                }
+            }
+          }
+        }
+
+        function sortTable(n) {
+          var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+          table = document.getElementById("tableCauHoi");
+          switching = true;
+          // Set the sorting direction to ascending:
+          dir = "asc";
+          /* Make a loop that will continue until no switching has been done: */
+          while (switching) {
+            // Start by saying: no switching is done:
+            switching = false;
+            rows = table.rows;
+            /* Loop through all table rows (except the first, which contains table headers): */
+            for (i = 1; i < (rows.length - 1); i++) {
+              // Start by saying there should be no switching:
+              shouldSwitch = false;
+              /* Get the two elements you want to compare, one from current row and one from the next: */
+              x = rows[i].getElementsByTagName("TD")[n];
+              y = rows[i + 1].getElementsByTagName("TD")[n];
+              /* Check if the two rows should switch place, based on the direction, asc or desc: */
+              if (dir == "asc") {
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              } else if (dir == "desc") {
+                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              }
+            }
+            if (shouldSwitch) {
+              /* If a switch has been marked, make the switch and mark that a switch has been done: */
+              rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+              switching = true;
+              // Each time a switch is done, increase this count by 1:
+              switchcount ++;
+            } else {
+              /* If no switching has been done AND the direction is "asc", set the direction to "desc" and run the while loop again. */
+              if (switchcount == 0 && dir == "asc") {
+                dir = "desc";
+                switching = true;
+              }
+            }
+          }
+          for (let i = 1; i < rows.length; i++) {
+            rows[i].getElementsByTagName("td")[0].innerText = i;
+          }
+        }
+    </script>
+{% endblock %}
+
+

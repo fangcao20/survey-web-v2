@@ -1,0 +1,139 @@
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Tạo nhóm câu hỏi</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-1">
+            <label class="col-form-label">Tên nhóm</label>
+            <br>
+            <span class="fs-6 fw-light fst-italic">Ví dụ: Cơ sở vật chất</span>
+            <input type="text" class="form-control" id="ten_nhom">
+          </div>
+          <div class="mb-1">
+            <label class="col-form-label">Mã nhóm</label>
+            <br>
+            <span class="fs-6 fw-light fst-italic">Ví dụ: CSVC</span>
+            <input class="form-control" id="ma_nhom">
+          </div>
+        </form>
+      </div>
+      <div class="container">
+        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Tìm kiếm đề tài...">
+        <div style="height: 300px; overflow: auto">
+          <table class="table" id="tableNhomCauHoi">
+            <thead>
+              <tr>
+                <th style="width: 50px">STT</th>
+                <th>Chọn</th>
+                <th onclick="sortTable(2)">Mã nhóm</th>
+                <th onclick="sortTable(3)">Tên nhóm</th>
+                <th style="display: none">ID</th>
+              </tr>
+            </thead>
+            <tbody id="bodyTableNhomCauHoi"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer" style=" display: flex; justify-content: space-between;">
+        <div class="button-group-left" style="flex-grow: 1;">
+          <button type="button" class="btn btn-success" onclick="luu_nhom_cau_hoi()">Lưu</button>
+          <button type="button" class="btn btn-secondary" onclick="sua_nhom_cau_hoi()">Sửa</button>
+          <button type="button" class="btn btn-danger" onclick="xoa_nhom_cau_hoi()">Xóa</button>
+          <button type="button" class="btn btn-primary" onclick="huy_nhom_cau_hoi()">Hủy</button>
+        </div>
+        <div class="button-group-right">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+        function myFunction() {
+          // Declare variables
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("tableNhomCauHoi");
+          tr = table.getElementsByTagName("tr");
+
+          // Loop through all table rows, and hide those who don't match the search query
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td");
+            for (j = 2; j < td.length; j++) {
+                if (td[j]) {
+                  txtValue = td[j].textContent || td[j].innerText;
+                  if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    break;
+                  } else {
+                    tr[i].style.display = "none";
+                  }
+                }
+            }
+          }
+        }
+
+        function sortTable(n) {
+          var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+          table = document.getElementById("tableNhomCauHoi");
+          switching = true;
+          // Set the sorting direction to ascending:
+          dir = "asc";
+          /* Make a loop that will continue until
+          no switching has been done: */
+          while (switching) {
+            // Start by saying: no switching is done:
+            switching = false;
+            rows = table.rows;
+            /* Loop through all table rows (except the
+            first, which contains table headers): */
+            for (i = 1; i < (rows.length - 1); i++) {
+              // Start by saying there should be no switching:
+              shouldSwitch = false;
+              /* Get the two elements you want to compare,
+              one from current row and one from the next: */
+              x = rows[i].getElementsByTagName("TD")[n];
+              y = rows[i + 1].getElementsByTagName("TD")[n];
+              /* Check if the two rows should switch place,
+              based on the direction, asc or desc: */
+              if (dir == "asc") {
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              } else if (dir == "desc") {
+                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              }
+            }
+            if (shouldSwitch) {
+              /* If a switch has been marked, make the switch
+              and mark that a switch has been done: */
+              rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+              switching = true;
+              // Each time a switch is done, increase this count by 1:
+              switchcount ++;
+            } else {
+              /* If no switching has been done AND the direction is "asc",
+              set the direction to "desc" and run the while loop again. */
+              if (switchcount == 0 && dir == "asc") {
+                dir = "desc";
+                switching = true;
+              }
+            }
+          }
+          for (let i = 1; i < rows.length; i++) {
+            rows[i].getElementsByTagName("td")[0].innerText = i;
+          }
+        }
+    </script>

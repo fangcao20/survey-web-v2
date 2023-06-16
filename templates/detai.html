@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}
+    Đề tài
+{% endblock %}
+{% block script %}
+    <script src="/static/detai.js"></script>
+{% endblock %}
+{% block nav %}
+    <li class="nav-item">
+    <a class="nav-link active" aria-current="page" href="/detai">Đề tài</a>
+   </li>
+   <li class="nav-item">
+    <a class="nav-link" href="/taocauhoi">Tạo câu hỏi</a>
+   </li>
+   <li class="nav-item">
+    <a class="nav-link" href="/khaosat">Khảo sát</a>
+   </li>
+   <li class="nav-item dropdown">
+    <a class="nav-link" href="/phantich">Phân tích</a>
+   </li>
+    {% endblock%}
+{% block content %}
+    <div id="content" class="container">
+      <div>
+        <h5>Đề tài</h5>
+          <form method="POST" action="/insert_detai">
+            <input class="form-control mb-2" type="text" id="ten_de_tai" placeholder="Tên đề tài">
+            <input class="form-control mb-2" type="text" id="ma_de_tai" placeholder="Mã đề tài">
+            <input class="form-control mb-2" id="nguoi_thuc_hien" type="text" placeholder="Người thực hiện">
+            <input class="form-control mb-2" id="ngay_thuc_hien" type="date" placeholder="Ngày thực hiện">
+            <textarea class="form-control mb-2" placeholder="Mô tả" id="mo_ta" name="mo_ta" style="height: 100px"></textarea>
+          </form>
+
+          <!-- Button group -->
+          <div id="button_group" class="d-flex mb-2">
+            <div class="container ms-auto">
+              <button type="button" class="btn btn-success" onclick="luu_de_tai()">Lưu</button>
+              <button type="button" class="btn btn-secondary" onclick="sua_de_tai()">Sửa</button>
+              <button type="button" class="btn btn-danger" onclick="xoa_de_tai()">Xóa</button>
+              <button type="button" class="btn btn-primary" onclick="huy()">Hủy</button>
+            </div>
+          </div>
+      </div>
+
+
+      <!-- Hiện thị data grid -->
+      <div>
+        <h5>Danh sách đề tài</h5>
+        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Tìm kiếm đề tài...">
+        <div>
+          <table id="tableDeTai" class="table" style="height: 500px; overflow: auto;">
+            <thead style="background: #eeeeee">
+              <th>STT</th>
+              <th>Chọn</th>
+              <th style="width: 100px" onclick="sortTable(2)">Mã đề tài</th>
+              <th onclick="sortTable(3)">Tên đề tài</th>
+              <th style="width: 200px" onclick="sortTable(4)">Người thực hiện</th>
+              <th style="width: 150px" onclick="sortTable(5)">Ngày thực hiện</th>
+              <th>Mô tả</th>
+              <th style="display: none">ID</th>
+            </thead>
+            <tbody id="bodyTableDeTai">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script>
+        function myFunction() {
+          // Declare variables
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("tableDeTai");
+          tr = table.getElementsByTagName("tr");
+
+          // Loop through all table rows, and hide those who don't match the search query
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td");
+            for (j = 2; j < td.length; j++) {
+                if (td[j]) {
+                  txtValue = td[j].textContent || td[j].innerText;
+                  if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    break;
+                  } else {
+                    tr[i].style.display = "none";
+                  }
+                }
+            }
+          }
+        }
+
+        function sortTable(n) {
+          var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+          table = document.getElementById("tableDeTai");
+          switching = true;
+          // Set the sorting direction to ascending:
+          dir = "asc";
+          /* Make a loop that will continue until
+          no switching has been done: */
+          while (switching) {
+            // Start by saying: no switching is done:
+            switching = false;
+            rows = table.rows;
+            /* Loop through all table rows (except the
+            first, which contains table headers): */
+            for (i = 1; i < (rows.length - 1); i++) {
+              // Start by saying there should be no switching:
+              shouldSwitch = false;
+              /* Get the two elements you want to compare,
+              one from current row and one from the next: */
+              x = rows[i].getElementsByTagName("TD")[n];
+              y = rows[i + 1].getElementsByTagName("TD")[n];
+              /* Check if the two rows should switch place,
+              based on the direction, asc or desc: */
+              if (dir == "asc") {
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              } else if (dir == "desc") {
+                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              }
+            }
+            if (shouldSwitch) {
+              /* If a switch has been marked, make the switch
+              and mark that a switch has been done: */
+              rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+              switching = true;
+              // Each time a switch is done, increase this count by 1:
+              switchcount ++;
+            } else {
+              /* If no switching has been done AND the direction is "asc",
+              set the direction to "desc" and run the while loop again. */
+              if (switchcount == 0 && dir == "asc") {
+                dir = "desc";
+                switching = true;
+              }
+            }
+          }
+          for (let i = 1; i < rows.length; i++) {
+            rows[i].getElementsByTagName("td")[0].innerText = i;
+          }
+        }
+    </script>
+{% endblock %}
