@@ -1,78 +1,18 @@
-$(document).ready(function () {
-//change selectboxes to selectize mode to be searchable
-   $("select").select2();
-});
-if (localStorage.getItem('token')) {
-    localStorage.removeItem('token');
-}
-// Lưu câu trả lời đã chọn
+document.getElementById('ten_de_tai').innerHTML = detai['ten_de_tai'];
+document.getElementById('mo_ta_de_tai').innerHTML = detai['mo_ta'];
+sendData('','');
+sendData(detai, 'chondetai');
 var checkedDict = {};
-let email = localStorage.getItem('email');
-let data = {
-  email: email
-};
-sendDataDetai(data, '');
-function sendDataDetai(data, action) {
+function sendData(data, action) {
     $.ajax({
-      url: '/detai',
+      url: '/phieukhaosat',
       method: 'POST',
       data: JSON.stringify({data: data, action: action}),
       contentType: 'application/json',
       success: function(response) {
-        if (response.detaiList) {
-            hienThiLuaChonDeTai(response.detaiList);
-        };
-
-       if (response.user_id) {
-            localStorage.setItem('user_id', JSON.stringify(response.user_id));
-       };
-
-       if (response.name) {
-            localStorage.setItem('name', JSON.stringify(response.name));
-       };
-
-       if (localStorage.getItem('detai_id')) {
-            localStorage.removeItem('detai_id');
-       };
-       if (localStorage.getItem('nhomcauhoi_id')) {
-            localStorage.removeItem('nhomcauhoi_id');
-       };
-      },
-      error: function(xhr, status, error) {
-        console.log(error);
-      }
-    });
-};
-
-function hienThiLuaChonDeTai(detaiList) {
-    html = '<option>Chọn đề tài...</option>';
-    for (detai of detaiList) {
-        option = detai['ma_de_tai'] + ' - ' + detai['ten_de_tai'];
-        html += `
-            <option value=${detai['detai_id']}>${option}</option>
-        `;
-    }
-    document.getElementById('chon_detai').innerHTML = html;
-}
-
-function sendDataTaoCauHoi(data, action) {
-    $.ajax({
-      url: '/taocauhoi',
-      method: 'POST',
-      data: JSON.stringify({data: data, action: action}),
-      contentType: 'application/json',
-      success: function(response) {
+        console.log(response);
         if (response.nhomcauhoiList) {
             hienButtonNhomCauHoi(response.nhomcauhoiList);
-        }
-        if (response.detaiList) {
-            for (let detai of response.detaiList) {
-                if (detai['detai_id'].toString() === localStorage.getItem('detai_id').replaceAll('"','')) {
-                    document.getElementById('mo_ta').value = detai['mo_ta'];
-                    localStorage.setItem('token', JSON.stringify(detai['token']));
-
-                }
-            }
         }
         if (response.cauhoiList) {
             if (response.traloiDict) {
@@ -94,21 +34,6 @@ function sendDataTaoCauHoi(data, action) {
       }
     });
 };
-
-function chon_de_tai() {
-    let select = document.getElementById('chon_detai');
-    let option = select.options[select.selectedIndex];
-
-    let detai_id = option.value;
-    localStorage.setItem('detai_id', JSON.stringify(detai_id))
-    let data = {
-        'detai_id': detai_id,
-        'user_id': localStorage.getItem('user_id')
-    }
-    checkedDict = {};
-    document.getElementById('button_gui').style.display = 'block';
-    sendDataTaoCauHoi(data, 'chondetai');
-}
 
 function hienButtonNhomCauHoi(nhomcauhoiList) {
     let html = '';
@@ -157,7 +82,7 @@ function hienNhomCauHoi(n) {
         'detai_id': localStorage.getItem('detai_id'),
         'nhomcauhoi_id': nhomcauhoi_id
     }
-    sendDataTaoCauHoi(data, 'chonnhomcauhoi');
+    sendData(data, 'chonnhomcauhoi');
 
 
 }
@@ -188,6 +113,17 @@ function radioCheck() {
         buttonNhom.classList.add('btn-success');
     }
 
+    let done = true;
+    let btns = document.querySelectorAll('#button_nhom_cau_hoi > button');
+    for (let btn of btns) {
+        if (btn.classList.contains('btn-secondary')) {
+            done = false;
+            break;
+        }
+    }
+    if (done) {
+        document.getElementById('button_gui').style.display = 'block';
+    }
 }
 
 // Hiện các câu đã checked khi di chuyển qua mỗi nhóm câu hỏi
@@ -224,7 +160,7 @@ function hienCauHoi(cauhoiList, traloiDict) {
         for (traloi of traloiList) {
             htmlTraLoi += `
                 <div class="form-check">
-                      <input class="form-check-input" type="radio" name="${cauhoiList[i]['cauhoi_id']}" onclick="radioCheck()" disabled>
+                      <input class="form-check-input" type="radio" name="${cauhoiList[i]['cauhoi_id']}" onclick="radioCheck()">
                       <label class="form-check-label">
                         ${traloi['noi_dung']}
                       </label>
@@ -237,22 +173,30 @@ function hienCauHoi(cauhoiList, traloiDict) {
     document.getElementById('hien_thi_cau_hoi').innerHTML = htmlCauHoi;
 }
 
-function gui_link_khao_sat() {
-    let token = localStorage.getItem('token').replaceAll('"','');
-    let link = `http://127.0.0.1:5000/phieukhaosat?page=${token}`
-    document.getElementById('duong_dan').value = link;
-}
+function gui_phieu_khao_sat() {
+    if (document.getElementById('nguoi_khao_sat').value === '') {
+        alert("Vui lòng điền người khảo sát!");
+    } else if (document.getElementById('ngay_khao_sat').value === '') {
+        alert("Vui lòng điền ngày khảo sát");
+    } else {
+        let data = {};
+        data['checkedDict'] = checkedDict;
+        data['detai_id'] = detai['detai_id'];
 
-function sao_chep() {
-    let link = document.getElementById('duong_dan');
-    // Select the text field
-    link.select();
-    link.setSelectionRange(0, 99999); // For mobile devices
+        let thong_tin = {};
+        thong_tin['ngay_khao_sat'] = document.getElementById('ngay_khao_sat').value;
+        thong_tin['nguoi_khao_sat'] = document.getElementById('nguoi_khao_sat').value;
 
-    // Copy the text inside the text field
-    navigator.clipboard.writeText(link.value);
+        data['thong_tin'] = thong_tin;
 
-    // Alert the copied text
-    alert("Đã sao chép link!\n" + link.value);
-    window.open(link.value, '_blank');
+        sendData(data, 'kết quả');
+        alert("Gửi thành công. Cảm ơn!");
+
+        document.getElementById('ngay_khao_sat').value = '';
+        document.getElementById('nguoi_khao_sat').value = '';
+        let radios = document.querySelectorAll('input[type=radio]');
+        for (radio of radios) {
+            radio.checked = false;
+        }
+    }
 }

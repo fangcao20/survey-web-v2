@@ -4,3 +4,7 @@ mysql-connector-python
 pandas==1.3.5
 psython
 bcrypt
+factor_analyzer
+numpy
+pingouin
+prettytable

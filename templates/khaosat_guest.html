@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}
+    Khảo sát
+{% endblock %}
+{% block script %}
+{% endblock %}
+
+{% block content %}
+    <div id="content" class="container">
+      <div>
+        <h5>Thông tin khảo sát</h5>
+        <form method="POST" action="/insert_detai">
+            <table style="width: 100%">
+              <tr class="row">
+                <td class="col col-2">
+                  <label>Đề tài</label>
+                </td>
+                <td class="col col-10 mb-1">
+                  <h6 id="ten_de_tai"></h6>
+                </td>
+              </tr>
+              <tr class="row">
+                <td class="col col-2">
+                  <label>Người khảo sát</label>
+                </td>
+                <td class="col col-10">
+                    <input class="form-control mb-2" id="nguoi_khao_sat" type="text">
+                </td>
+              </tr>
+              <tr class="row">
+                <td class="col col-2">
+                  <label>Ngày khảo sát</label>
+                </td>
+                <td class="col col-10">
+                    <input class="form-control mb-2" id="ngay_khao_sat" type="date">
+                </td>
+              </tr>
+              <tr class="row">
+                <td class="col col-2">
+                  <label>Mô tả</label>
+                </td>
+                <td class="col col-10">
+                    <p id="mo_ta_de_tai"></p>
+                </td>
+              </tr>
+            </table>
+
+        </form>
+
+              <!-- Hiện thị data grid -->
+        <div>
+          <h5>Câu hỏi khảo sát</h5>
+          <div class="row">
+              <div class="col-3" style="height: 500px; overflow: auto">
+                 <div id="button_nhom_cau_hoi"></div>
+              </div>
+              <div class="col-9">
+                <div id="hien_thi_cau_hoi" style="height: 500px; overflow: auto; margin-bottom: 50px"></div>
+                <div>
+                    <button class="btn btn-success mb-5" style="width: 150px; display: none; float: right; margin-right: 100px" id="button_gui" onclick="gui_phieu_khao_sat()">Gửi</button>
+                </div>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+        document.getElementById('username').style.display = 'none';
+        document.getElementById('dang_xuat').style.display = 'none';
+        var detai = {{ detai | tojson }};
+    </script>
+    <script src="/static/khaosat_guest.js"></script>
+{% endblock %}
+
+

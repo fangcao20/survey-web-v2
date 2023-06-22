@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}
+    Phân tích
+{% endblock %}
+{% block script %}
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="/static/phantich.js"></script>
+{% endblock %}
+{% block style %}
+    #myForm > label {
+        background: #eeeeee;
+        padding: 5px 10px;
+        border-radius: 8px;
+        margin-right: 20px;
+    }
+{% endblock %}
+{% block nav %}
+    <li class="nav-item">
+    <a class="nav-link" href="/detai">Đề tài</a>
+   </li>
+   <li class="nav-item">
+    <a class="nav-link" href="/taocauhoi">Tạo câu hỏi</a>
+   </li>
+   <li class="nav-item">
+    <a class="nav-link" href="/khaosat">Khảo sát</a>
+   </li>
+   <li class="nav-item dropdown">
+    <a class="nav-link active" aria-current="page" href="/phantich">Phân tích</a>
+   </li>
+    {% endblock%}
+{% block content %}
+    <div id="content" class="container">
+
+        <!-- Input câu hỏicc -->
+      <div class="d-flex align-items-center">
+          <h5>Chọn dữ liệu</h5>
+          <div class="form-check" style="margin-left: 50px; margin-right: 200px">
+            <input class="form-check-input" name="Chọn dữ liệu" type="radio" value="Từ đề tài" onclick="tudetai()">
+            <label class="form-check-label">Từ đề tài</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" name="Chọn dữ liệu" type="radio" value="Từ tệp tin" onclick="tuteptin()">
+            <label class="form-check-label">Từ tệp tin</label>
+          </div>
+      </div>
+      <div id="input_detai" style="display: none">
+        <select class="form-select" id="chon_detai" onchange="chon_de_tai()" style="width: 100%">
+        </select>
+          <div style="height: 500px; overflow: auto; margin-top: 10px">
+          <table class="table table-bordered table-hover table-sm text-center">
+            <thead style="background: #eeeeee">
+                <tr id="headTableKetQua"></tr>
+            </thead>
+            <tbody id="bodyTableKetQua"></tbody>
+          </table>
+      </div>
+      </div>
+
+      <div id="input_dulieu" style="display: none">
+          <form id="myForm" enctype="multipart/form-data">
+              <label for="fileinput" style="display: inline-block;">Chọn tệp tin</label>
+              <div id="hienthitenfile" style="display: inline-block;"></div>
+              <input type="file" onchange="xulyfile()" id="fileinput" style="display: none" name="file">
+          </form>
+          <div style="height: 500px; overflow: auto; margin-top: 10px">
+              <table class="table table-bordered table-hover table-sm text-center">
+                <thead style="background: #eeeeee">
+                    <tr id="headTableFile"></tr>
+                </thead>
+                <tbody id="bodyTableFile"></tbody>
+              </table>
+          </div>
+      </div>
+      <div class="mt-5 d-flex mb-5">
+        <div id="button_phantich" class="container ms-auto" style="display: none; ">
+          <button type="button" class="btn btn-primary" style="float: right; min-width: 170px" id="danhgiachinhthuc" onclick="window.open('/danhgiachinhthuc', '_blank')">Đánh giá chính thức</button>
+          <button type="button" class="btn btn-success" style="float: right; margin-right: 10px; min-width: 170px" onclick="window.open('/danhgiasobo', '_blank')">Đánh giá sơ bộ</button>
+        </div>
+      </div>
+    </div>
+    <script>
+        function myFunction() {
+          // Declare variables
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("tableDeTai");
+          tr = table.getElementsByTagName("tr");
+
+          // Loop through all table rows, and hide those who don't match the search query
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td");
+            for (j = 2; j < td.length; j++) {
+                if (td[j]) {
+                  txtValue = td[j].textContent || td[j].innerText;
+                  if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    break;
+                  } else {
+                    tr[i].style.display = "none";
+                  }
+                }
+            }
+          }
+        }
+
+        function sortTable(n) {
+          var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+          table = document.getElementById("tableDeTai");
+          switching = true;
+          // Set the sorting direction to ascending:
+          dir = "asc";
+          /* Make a loop that will continue until
+          no switching has been done: */
+          while (switching) {
+            // Start by saying: no switching is done:
+            switching = false;
+            rows = table.rows;
+            /* Loop through all table rows (except the
+            first, which contains table headers): */
+            for (i = 1; i < (rows.length - 1); i++) {
+              // Start by saying there should be no switching:
+              shouldSwitch = false;
+              /* Get the two elements you want to compare,
+              one from current row and one from the next: */
+              x = rows[i].getElementsByTagName("TD")[n];
+              y = rows[i + 1].getElementsByTagName("TD")[n];
+              /* Check if the two rows should switch place,
+              based on the direction, asc or desc: */
+              if (dir == "asc") {
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              } else if (dir == "desc") {
+                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                  // If so, mark as a switch and break the loop:
+                  shouldSwitch = true;
+                  break;
+                }
+              }
+            }
+            if (shouldSwitch) {
+              /* If a switch has been marked, make the switch
+              and mark that a switch has been done: */
+              rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+              switching = true;
+              // Each time a switch is done, increase this count by 1:
+              switchcount ++;
+            } else {
+              /* If no switching has been done AND the direction is "asc",
+              set the direction to "desc" and run the while loop again. */
+              if (switchcount == 0 && dir == "asc") {
+                dir = "desc";
+                switching = true;
+              }
+            }
+          }
+          for (let i = 1; i < rows.length; i++) {
+            rows[i].getElementsByTagName("td")[0].innerText = i;
+          }
+        }
+    </script>
+{% endblock %}

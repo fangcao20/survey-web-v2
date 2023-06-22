@@ -1,4 +1,5 @@
 import mysql.connector as connector
+import csv
 
 mydb = connector.connect(user='root', password='Phiphi05',
                          host='localhost',
@@ -72,11 +73,11 @@ def lay_de_tai(user_id):
 
 
 def luu_de_tai(detai):
-    values = (detai['user_id'], detai['ma_de_tai'], detai['ten_de_tai'],
-              detai['nguoi_thuc_hien'], detai['ngay_thuc_hien'], detai['mo_ta'])
     if 'detai_id' not in detai:
-        sql = """INSERT INTO detai(user_id, ma_de_tai, ten_de_tai, nguoi_thuc_hien, ngay_thuc_hien, mo_ta)
-                        VALUES (%s, %s, %s, %s, %s, %s)"""
+        values = (detai['user_id'], detai['ma_de_tai'], detai['ten_de_tai'],
+                  detai['nguoi_thuc_hien'], detai['ngay_thuc_hien'], detai['mo_ta'], detai['token'])
+        sql = """INSERT INTO detai(user_id, ma_de_tai, ten_de_tai, nguoi_thuc_hien, ngay_thuc_hien, mo_ta, token)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)"""
         mycursor.execute(sql, values)
         print("Insert", values)
         mydb.commit()
@@ -91,7 +92,7 @@ def luu_de_tai(detai):
                         WHERE detai_id = %s
                         """
         values = (detai['user_id'], detai['ma_de_tai'], detai['ten_de_tai'],
-              detai['nguoi_thuc_hien'], detai['ngay_thuc_hien'], detai['mo_ta'], detai['detai_id'])
+                  detai['nguoi_thuc_hien'], detai['ngay_thuc_hien'], detai['mo_ta'], detai['detai_id'])
         mycursor.execute(sql, values)
         print("Update", values)
         mydb.commit()
@@ -106,7 +107,6 @@ def xoa_de_tai(detai):
     mycursor.execute(sql, values)
     mydb.commit()
     print("Delete")
-
 
 
 def lay_nhom_cau_hoi(detai_id):
@@ -156,17 +156,27 @@ def xoa_nhom_cau_hoi(nhomcauhoi):
     print("Delete")
 
 
-def lay_cau_hoi(data):
+def lay_cau_hoi(data, trang_thai):
     nhomcauhoi_id = data['nhomcauhoi_id'].replace('"', '')
-    detai_id = data['detai_id'].replace('"', '')
-    if nhomcauhoi_id == 'Chọn':
-        sql = "SELECT * FROM cauhoi WHERE detai_id = %s"
-        mycursor.execute(sql, (detai_id,))
-        result = mycursor.fetchall()
+    detai_id = str(data['detai_id']).replace('"', '')
+    if trang_thai != '':
+        if nhomcauhoi_id == 'Chọn':
+            sql = "SELECT * FROM cauhoi WHERE detai_id = %s and trang_thai = %s"
+            mycursor.execute(sql, (detai_id, trang_thai))
+            result = mycursor.fetchall()
+        else:
+            sql = "SELECT * FROM cauhoi WHERE nhomcauhoi_id = %s and trang_thai = %s"
+            mycursor.execute(sql, (nhomcauhoi_id, trang_thai))
+            result = mycursor.fetchall()
     else:
-        sql = "SELECT * FROM cauhoi WHERE nhomcauhoi_id = %s"
-        mycursor.execute(sql, (nhomcauhoi_id,))
-        result = mycursor.fetchall()
+        if nhomcauhoi_id == 'Chọn':
+            sql = "SELECT * FROM cauhoi WHERE detai_id = %s"
+            mycursor.execute(sql, (detai_id,))
+            result = mycursor.fetchall()
+        else:
+            sql = "SELECT * FROM cauhoi WHERE nhomcauhoi_id = %s"
+            mycursor.execute(sql, (nhomcauhoi_id,))
+            result = mycursor.fetchall()
     columns = [column[0] for column in mycursor.description]
     records = []
     for row in result:
@@ -178,7 +188,7 @@ def lay_cau_hoi(data):
 
 
 def luu_cau_hoi(cauhoi):
-    values = (cauhoi['detai_id'].replace('"',''), cauhoi['nhomcauhoi_id'].replace('"',''), cauhoi['ma_cau_hoi'],
+    values = (cauhoi['detai_id'].replace('"', ''), cauhoi['nhomcauhoi_id'].replace('"', ''), cauhoi['ma_cau_hoi'],
               cauhoi['loaicautraloi_id'], cauhoi['noi_dung'], cauhoi['trang_thai'])
 
     if 'cauhoi_id' not in cauhoi:
@@ -218,7 +228,6 @@ def lay_cau_tra_loi(data):
         for i in range(len(columns)):
             record[columns[i]] = row[i]
         records.append(record)
-    print(record)
     return records
 
 
@@ -241,7 +250,6 @@ def luu_cau_tra_loi(traloiList, cauhoi_id):
             i += 1
 
 
-
 def xoa_cau_hoi(data):
     cauhoi_id = data['cauhoi_id']
     mycursor.execute("DELETE FROM cauhoi WHERE cauhoi_id = %s", (cauhoi_id,))
@@ -251,3 +259,97 @@ def xoa_cau_hoi(data):
         mycursor.execute("DELETE FROM thangdolikert WHERE cauhoi_id = %s", (cauhoi_id,))
     mydb.commit()
     print("Delete")
+
+
+def lay_de_tai_theo_token(token):
+    sql = "SELECT * FROM detai WHERE token = %s"
+    mycursor.execute(sql, (token,))
+    result = mycursor.fetchall()
+    columns = [column[0] for column in mycursor.description]
+    records = []
+    for row in result:
+        record = {}
+        for i in range(len(columns)):
+            record[columns[i]] = row[i]
+        records.append(record)
+    return records
+
+
+def luu_ket_qua(data):
+    detai_id = data['detai_id']
+    checkedDict = data['checkedDict']
+    thongtin = data['thong_tin']
+
+    sql = "INSERT INTO phieukhaosat(detai_id, nguoi_khao_sat, ngay_khao_sat) VALUES (%s, %s, %s)"
+    values = (detai_id, thongtin['nguoi_khao_sat'], thongtin['ngay_khao_sat'])
+    mycursor.execute(sql, values)
+    phieukhaosat_id = mycursor.lastrowid
+
+    for cauhoi_id, luachon in checkedDict.items():  # Giá trị này chỉ là thứ tự của lựa chọn, không phải id or điểm
+        # likert huhu :((
+        sql = "INSERT INTO cautraloi(phieukhaosat_id, cauhoi_id, lua_chon) VALUES (%s, %s, %s)"
+        values = (phieukhaosat_id, cauhoi_id, luachon)
+        mycursor.execute(sql, values)
+    mydb.commit()
+    print("Done")
+
+
+def lay_ket_qua(detai_id):
+    mycursor.execute("SELECT * FROM phieukhaosat WHERE detai_id = %s", (detai_id,))
+    phieukhaosats = mycursor.fetchall()
+    colPHS = [column[0] for column in mycursor.description]
+    ketquas = []
+    dt = []
+    for phieukhaosat in phieukhaosats:
+        ketqua = {}
+        thongtin = {}
+        for i in range(len(colPHS)):
+            thongtin[colPHS[i]] = phieukhaosat[i]
+        ketqua['thong_tin'] = thongtin
+        phieukhaosat_id = thongtin['phieukhaosat_id']
+        mycursor.execute("SELECT cauhoi_id, lua_chon FROM cautraloi WHERE phieukhaosat_id = %s", (phieukhaosat_id,))
+        cautralois = mycursor.fetchall()
+        traloi = {}
+        data = {}
+        print(phieukhaosat_id)
+        for cautraloi in cautralois:
+            cauhoi_id = cautraloi[0]
+            lua_chon = cautraloi[1]
+            mycursor.execute("SELECT ma_cau_hoi, loaicautraloi_id FROM cauhoi WHERE cauhoi_id = %s", (cauhoi_id,))
+            cauhoi = mycursor.fetchall()
+            ma_cau_hoi = cauhoi[0][0]
+            loaicautraloi_id = cauhoi[0][1]
+            if loaicautraloi_id == 1:
+                mycursor.execute("SELECT noi_dung FROM luachon WHERE cauhoi_id = %s", (cauhoi_id,))
+                tra_loi = mycursor.fetchall()[lua_chon][0]
+            else:
+                mycursor.execute("SELECT diem_likert FROM thangdolikert WHERE cauhoi_id = %s", (cauhoi_id,))
+                result = mycursor.fetchall()[lua_chon]
+                print(result)
+                tra_loi = result[0]
+                data[ma_cau_hoi] = tra_loi
+            traloi[ma_cau_hoi] = tra_loi
+        ketqua['tra_loi'] = traloi
+        ketquas.append(ketqua)
+        dt.append(data)
+    luu_csv(dt)
+    return ketquas
+
+
+def luu_csv(dt):
+    filename = 'data.csv'
+
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+
+        headers = dt[0].keys()
+        writer.writerow(headers)
+
+        for row in dt:
+            values = [value for key, value in row.items()]
+            writer.writerow(values)
+    print(f'Data saved to {filename}')
+
+def doi_trang_thai(cauhoi_id, trang_thai):
+    mycursor.execute("UPDATE cauhoi SET trang_thai = %s WHERE cauhoi_id = %s", (trang_thai, cauhoi_id))
+    mydb.commit()

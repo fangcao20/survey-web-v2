@@ -59,7 +59,7 @@ function luu_de_tai() {
         detai['detai_id'] = localStorage.getItem('detai_id');
         localStorage.removeItem('detai_id');
     };
-
+    console.log(detai);
     sendDataDetai(detai, 'luu');
     huy();
     alert("Lưu đề tài thành công!");
@@ -139,6 +139,4 @@ function sendDataDetai(data, action) {
     });
 };
 
-const localStorageData = JSON.stringify(localStorage);
-console.log(localStorageData);
 
