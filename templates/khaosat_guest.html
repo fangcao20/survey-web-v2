@@ -8,7 +8,6 @@
 {% block content %}
     <div id="content" class="container">
       <div>
-        <h5>Thông tin khảo sát</h5>
         <form method="POST" action="/insert_detai">
             <table style="width: 100%">
               <tr class="row">
@@ -49,13 +48,14 @@
 
               <!-- Hiện thị data grid -->
         <div>
-          <h5>Câu hỏi khảo sát</h5>
           <div class="row">
-              <div class="col-3" style="height: 500px; overflow: auto">
+              <div class="col-2" style="height: 800px; overflow: auto">
+                  <h6>Nhóm câu hỏi</h6>
                  <div id="button_nhom_cau_hoi"></div>
               </div>
-              <div class="col-9">
-                <div id="hien_thi_cau_hoi" style="height: 500px; overflow: auto; margin-bottom: 50px"></div>
+              <div class="col-10">
+                  <h6>Câu hỏi</h6>
+                <div id="hien_thi_cau_hoi" style="height: 800px; overflow: auto; margin-bottom: 50px"></div>
                 <div>
                     <button class="btn btn-success mb-5" style="width: 150px; display: none; float: right; margin-right: 100px" id="button_gui" onclick="gui_phieu_khao_sat()">Gửi</button>
                 </div>

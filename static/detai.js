@@ -20,9 +20,8 @@ function hienThiDeTai(data) {
         };
 
         html += `
-            <tr>
+            <tr id="${detai['detai_id']}" onclick="chon_de_tai(${detai['detai_id']})">
                 <td>${i + 1}</td>
-                <td><input type="checkbox"></td>
                 <td>${detai['ma_de_tai']}</td>
                 <td>${detai['ten_de_tai']}</td>
                 <td>${detai['nguoi_thuc_hien']}</td>
@@ -62,40 +61,39 @@ function luu_de_tai() {
     console.log(detai);
     sendDataDetai(detai, 'luu');
     huy();
-    alert("Lưu đề tài thành công!");
 };
 
-function chon_de_tai() {
-    let table = document.getElementById('tableDeTai');
-    let checkboxes = table.querySelectorAll('input[type="checkbox"]:checked');
-    if (checkboxes.length === 0) {
-        alert("Vui lòng chọn 1 đề tài.");
-    } else if (checkboxes.length > 1) {
-        alert("Vui lòng chỉ chọn 1 đề tài.");
-    } else {
-        let selectedRow = {};
-
-        checkboxes.forEach(function(checkbox) {
-          let row = checkbox.closest('tr');
-          let cells = row.cells;
-          selectedRow['ma_de_tai'] = cells[2].innerText;
-          selectedRow['ten_te_tai'] = cells[3].innerText;
-          selectedRow['nguoi_thuc_hien'] = cells[4].innerText;
-          selectedRow['ngay_thuc_hien'] = cells[5].innerText;
-          selectedRow['mo_ta'] = cells[6].innerText;
-          selectedRow['detai_id'] = parseInt(cells[7].innerText);
-        });
-
-        if (localStorage.getItem('user_id')) {
-            selectedRow['user_id'] = localStorage.getItem('user_id');
-        };
-
-        return selectedRow;
+function chon_de_tai(n) {
+    let rows = document.querySelectorAll('#bodyTableDeTai > tr');
+    for (let r of rows) {
+        if (r.id == `${n}`) {
+            r.classList.add('selected');
+        } else {
+            if (r.classList.contains('selected')) {
+                r.classList.remove('selected');
+            }
+        }
     }
-};
+    let row = document.getElementById(`${n}`);
+    let cells = row.cells;
+    let selectedRow = {};
+    selectedRow['ma_de_tai'] = cells[1].innerText;
+    selectedRow['ten_te_tai'] = cells[2].innerText;
+    selectedRow['nguoi_thuc_hien'] = cells[3].innerText;
+    selectedRow['ngay_thuc_hien'] = cells[4].innerText;
+    selectedRow['mo_ta'] = cells[5].innerText;
+    selectedRow['detai_id'] = parseInt(cells[6].innerText);
+
+    if (localStorage.getItem('user_id')) {
+        selectedRow['user_id'] = localStorage.getItem('user_id');
+    };
+
+    return selectedRow;
+}
 
 function sua_de_tai() {
-    selectedRow = chon_de_tai();
+    let row = document.getElementsByClassName('selected')[0];
+    let selectedRow = chon_de_tai(row.id);
     document.getElementById('ten_de_tai').value = selectedRow['ten_te_tai'];
     document.getElementById('ma_de_tai').value = selectedRow['ma_de_tai'];
     document.getElementById('nguoi_thuc_hien').value = selectedRow['nguoi_thuc_hien'];
@@ -105,9 +103,9 @@ function sua_de_tai() {
 };
 
 function xoa_de_tai() {
-    selectedRow = chon_de_tai();
+    let row = document.getElementsByClassName('selected')[0];
+    let selectedRow = chon_de_tai(row.id);
     sendDataDetai(selectedRow, 'xoa');
-    alert("Xóa đề tài thành công!");
 }
 
 function huy() {

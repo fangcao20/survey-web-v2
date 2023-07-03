@@ -4,6 +4,8 @@
 {% endblock %}
 {% block script %}
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="/static/danhgiachinhthuc.js"></script>
 {% endblock %}
 {% block style %}
@@ -18,6 +20,25 @@
         font-weight: 600;
         margin-bottom: 15px;
       }
+
+    .chuthichmau {
+        width: 40px;
+        height: 20px;
+        margin-right: 10px;
+    }
+
+    .chuthich_container {
+        display: flex;
+        margin-bottom: 16px;
+    }
+
+    .box {
+        display: flex;
+        flex-direction: row;
+        margin-right: 30px;
+        margin-left: 30px;
+    }
+
 {% endblock %}
 {% block nav %}
     <li class="nav-item">
@@ -42,18 +63,24 @@
           <li class="nav-item">
             <a id="efa" class="nav-link" onclick="nhantokhampha()">Nhân tố khám phá EFA</a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" style="display: none">
             <a id="tuongquan" class="nav-link" onclick="tuongquantuyentinh()">Tương quan tuyến tính</a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" style="display: none">
             <a id="hoiquy" class="nav-link" onclick="hoiquydabien()">Hồi quy đa biến</a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item" style="display: none">
             <a id="khacbiet" class="nav-link" onclick="sukhacbiet()">Kiểm định sự khác biệt</a>
+          </li>
+          <li class="nav-item">
+            <a id="mota" class="nav-link" onclick="thongkemota()">Thống kê mô tả</a>
+          </li>
+          <li class="nav-item" style="margin-left: 600px">
+              <button class="btn btn-success" id="btn-export" onclick="exportHTML();">Xuất kết quả</button>
           </li>
       </ul>
 
-      <div id="hienthicronbach">
+      <div id="hienthicronbach" style="margin-bottom: 50px">
           <div>
             <select class="form-select" aria-label="Default select example" id="chonnhomcauhoi" onchange="chon_nhom()" style="width: 100%">
             </select>
@@ -77,142 +104,253 @@
           </table>
           <h6>Tương quan biến tổng</h6>
           <div style="height: 500px; overflow: auto">
-              <table class="table table-bordered table-hover table-sm text-center" id="tableCron">
+              <table class="table table-bordered table-hover text-center" id="tableCron">
                   <thead id="headCron" style="background: #eeeeee"></thead>
                   <tbody id="bodyCron"></tbody>
               </table>
           </div>
       </div>
-      <div id="hienthiefa" style="display: none">
+      <div id="hienthiefa" style="display: none; margin-bottom: 50px">
+          <div class="d-flex align-items-center" style="height: 60px; margin: auto">
+              <h6 style="margin-bottom: 5px">Chọn loại biến</h6>
+              <div class="form-check" style="margin-left: 50px; margin-right: 200px">
+                <input class="form-check-input" name="Chọn dữ liệu" type="radio" value="Từ đề tài" onclick="efabiendoclap()" checked>
+                <label class="form-check-label">Biến độc lập</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" name="Chọn dữ liệu" type="radio" value="Từ tệp tin" onclick="efabienphuthuoc()">
+                <label class="form-check-label">Biến phụ thuộc</label>
+          </div>
+          </div>
           <h6>Hệ số KMO và Kiểm định Bartlett</h6>
           <table class="table" style="width: 500px">
+              <thead>
+                <tr>
+                    <th>Hệ số Kaiser-Meyer-Olkin</th>
+                    <th>Kiểm định Bartlett</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr>
-                    <td>Hệ số Kaiser-Meyer-Olkin</td>
                     <td id="kmo"></td>
+                    <td id="bartlett"></td>
                 </tr>
-              <tr>
-                  <td>Kiểm định Bartlett</td>
-                  <td id="bartlett"></td>
-              </tr>
               </tbody>
           </table>
           <h6>Tổng phương sai trích</h6>
-          <div style="height: 300px; overflow: auto; border: 1px solid #eeeeee; border-radius: 2px;">
-              <table class="table">
-                  <thead>
+          <div style="height: 300px; overflow: auto;">
+              <table class="table table-bordered table-hover text-center">
+                  <thead style="background: #eeeeee">
                     <tr>
-                        <th style="position: sticky; top: 0; background: white">Nhân tố</th>
-                        <th style="position: sticky; top: 0; background: white">Eigenvalue</th>
-                        <th style="position: sticky; top: 0; background: white">Tổng bình phương hệ số tải của biến</th>
-                        <th style="position: sticky; top: 0; background: white">Tỉ lệ phương sai</th>
-                        <th style="position: sticky; top: 0; background: white">Tổng phương sai tích lũy</th>
+                        <th>Nhân tố</th>
+                        <th>Eigenvalue</th>
+                        <th>Tổng bình phương hệ số tải của biến</th>
+                        <th>Tỉ lệ phương sai</th>
+                        <th>Tổng phương sai tích lũy</th>
                     </tr>
                   </thead>
                   <tbody id="bodyphuongsai">
                   </tbody>
               </table>
           </div>
-          <h6>Ma trận xoay</h6>
-          <p>Phương pháp PCA với phép xoay varimax</p>
-          <div style="height: 500px; overflow: auto; border: 1px solid #eeeeee; border-radius: 2px;">
+          <div id="matranxoay">
+              <h6 style="margin-bottom: 2px">Ma trận xoay</h6>
+              <p>Phương pháp PCA với phép xoay varimax</p>
+              <div style="height: 500px; overflow: auto; margin-bottom: 5px">
+                  <table class="table table-bordered table-hover text-center">
+                      <thead style="background: #eeeeee">
+                        <tr id="headmatranxoay"></tr>
+                      </thead>
+                      <tbody id="bodymatranxoay">
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+          <div style="display: none">
+              <h6 style="margin-bottom: 2px">Giá trị nhân tố</h6>
+              <p>Tính theo trung bình cộng</p>
+              <div style="height: 500px; overflow: auto; margin-bottom: 50px">
+                  <table class="table table-bordered table-hover text-center">
+                      <thead style="background: #eeeeee">
+                        <tr id="headnhantodaidien">
+                        </tr>
+                      </thead>
+                      <tbody id="bodynhantodaidien"></tbody>
+                  </table>
+              </div>
+          </div>
+      </div>
+      <div id="hienthituongquan" style="display: none; margin-bottom: 50px">
+          <h6>Tương quan Pearson </h6>
+          <div class="chuthich_container">
+              <div class="box">
+                  <div class="chuthichmau" style="background: #485696"></div>
+                  < 0
+              </div>
+              <div class="box">
+                  <div class="chuthichmau" style="background: #E7E7e7"></div>
+                  0 - 0.25
+              </div>
+              <div class="box">
+                  <div class="chuthichmau" style="background: #f9c784"></div>
+                  0.25 - 0.5
+              </div>
+              <div class="box">
+                  <div class="chuthichmau" style="background: #fc7a1e"></div>
+                  0.5 - 0.75
+              </div>
+              <div class="box">
+                  <div class="chuthichmau" style="background: #f24c00"></div>
+                  0.75 - 1
+              </div>
+          </div>
+          <div style="height: 400px; overflow: auto;">
+              <table class="table table-bordered table-hover text-center">
+                  <thead>
+                        <tr id="headTuongquan">
+                        </tr>
+                      </thead>
+                      <tbody id="bodyTuongquan"></tbody>
+              </table>
+          </div>
+
+      </div>
+      <div id="hienthihoiquy" style="display: none; margin-bottom: 50px">
+          <div class="mb-3" style="display: none">
+            <select class="form-select" aria-label="Default select example" id="chonbienphuthuoc" onchange="chon_bien_phu_thuoc()" style="width: 100%">
+            </select>
+          </div>
+          <div>
+              <h6>ANOVA & Tóm tắt mô hình</h6>
               <table class="table">
                   <thead>
-                    <tr id="headmatranxoay"></tr>
+                    <tr>
+                        <th>Kiểm định F</th>
+                        <th>P-value</th>
+                        <th>R bình phương</th>
+                        <th>R bình phương hiệu chỉnh</th>
+                    </tr>
                   </thead>
-                  <tbody id="bodymatranxoay">
+                  <tbody>
+                    <tr id="bodyanova"></tr>
                   </tbody>
               </table>
           </div>
-      </div>
+          <div>
+              <h6>Hệ số hồi quy</h6>
+              <table class="table table-bordered table-hover text-center">
+                  <thead style="background: #eeeeee">
+                    <tr>
+                        <th>Biến</th>
+                        <th>Hệ số B (chưa chuẩn hóa)</th>
+                        <th>P-value</th>
+                        <th>Hệ số Beta (chuẩn hóa)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bodyhesohoiquy"></tbody>
+              </table>
           </div>
-        <div class="mt-5 d-flex mb-5">
-        <div id="button_phantich" class="container ms-auto">
-          <button type="button" class="btn btn-primary" style="float: right; min-width: 170px; margin-left: 10px" onclick="window.open('/thongkemota', '_blank')">Thống kê mô tả</button>
+      </div>
+      <div id="hienthikhacbiet" style="display: none; margin-bottom: 50px">
+          <div class="mb-3">
+            <select class="form-select" aria-label="Default select example" id="chonbiendoclap" onchange="chon_bien_doc_lap()" style="width: 100%">
+            </select>
+          </div>
+          <div>
+              <h6>Thông số mô tả</h6>
+              <table class="table table-bordered table-hover text-center">
+                  <thead style="background: #eeeeee">
+                    <tr>
+                        <th></th>
+                        <th>N</th>
+                        <th>Trung bình</th>
+                        <th>Độ lệch chuẩn</th>
+                        <th>Sai số chuẩn</th>
+                        <th>Khoảng tin cậy 95%</th>
+                        <th>Khoảng tin cậy</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bodythongsomota"></tbody>
+              </table>
+          </div>
+          <div>
+              <h6>Tính đồng nhất của phương sai</h6>
+              <table class="table" style="width: 50%;">
+                  <thead>
+                    <tr>
+                        <th style="width: 50%;">Thống kê Levene</th>
+                        <th>P-value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bodylevene"></tbody>
+              </table>
+          </div>
+          <div>
+              <h6>ANOVA</h6>
+              <table class="table" style="width: 50%;">
+                  <thead>
+                    <tr>
+                        <th style="width: 50%;">Kiểm định F</th>
+                        <th>P-value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bodyanovakhacbiet"></tbody>
+              </table>
+          </div>
+          <div>
+              <h6>Kiểm định Welch</h6>
+              <table class="table" style="width: 50%;">
+                  <thead>
+                    <tr>
+                        <th style="width: 50%;">Thống kê Welch</th>
+                        <th>P-value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bodywelch"></tbody>
+              </table>
+          </div>
+          <div>
+              <h6>Biểu đồ trung bình</h6>
+              <canvas id="lineChart"></canvas>
+          </div>
+      </div>
+      <div id="hienthithongkemota" style="display: none; margin-bottom: 50px">
+          <div style="height: 400px; overflow: auto; margin-bottom: 20px;">
+              <h6>Trung bình và độ lệch chuẩn</h6>
+              <table class="table table-bordered table-hover">
+                  <thead style="background: #eeeeee">
+                    <tr>
+                        <th>Biến</th>
+                        <th>N</th>
+                        <th>Trung bình</th>
+                        <th>Độ lệch chuẩn</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bodythongkemota"></tbody>
+              </table>
+          </div>
+          <div style="margin-bottom: 20px;">
+              <h6>Tần số và phần trăm</h6>
+              <table class="table">
+                  <thead style="background: #eeeeee">
+                    <tr>
+                        <th id="ten_bien"></th>
+                        <th>Tần số</th>
+                        <th>Phần trăm</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bodytanso"></tbody>
+              </table>
+          </div>
+          <h6>Biểu đồ</h6>
+          <div style="display: flex; flex-direction: row;">
+              <div style="width: 50%; height: 400px;">
+                <canvas id="barChart"></canvas>
+              </div>
+              <div style="width: 50%; height: 400px;">
+                <canvas id="pieChart" style="margin-left: 50px;"></canvas>
+              </div>
+            </div>
       </div>
     </div>
-    <script>
-        function myFunction() {
-          // Declare variables
-          var input, filter, table, tr, td, i, txtValue;
-          input = document.getElementById("myInput");
-          filter = input.value.toUpperCase();
-          table = document.getElementById("tableDeTai");
-          tr = table.getElementsByTagName("tr");
-
-          // Loop through all table rows, and hide those who don't match the search query
-          for (i = 0; i < tr.length; i++) {
-            td = tr[i].getElementsByTagName("td");
-            for (j = 2; j < td.length; j++) {
-                if (td[j]) {
-                  txtValue = td[j].textContent || td[j].innerText;
-                  if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
-                    break;
-                  } else {
-                    tr[i].style.display = "none";
-                  }
-                }
-            }
-          }
-        }
-
-        function sortTable(n) {
-          var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-          table = document.getElementById("tableDeTai");
-          switching = true;
-          // Set the sorting direction to ascending:
-          dir = "asc";
-          /* Make a loop that will continue until
-          no switching has been done: */
-          while (switching) {
-            // Start by saying: no switching is done:
-            switching = false;
-            rows = table.rows;
-            /* Loop through all table rows (except the
-            first, which contains table headers): */
-            for (i = 1; i < (rows.length - 1); i++) {
-              // Start by saying there should be no switching:
-              shouldSwitch = false;
-              /* Get the two elements you want to compare,
-              one from current row and one from the next: */
-              x = rows[i].getElementsByTagName("TD")[n];
-              y = rows[i + 1].getElementsByTagName("TD")[n];
-              /* Check if the two rows should switch place,
-              based on the direction, asc or desc: */
-              if (dir == "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                  // If so, mark as a switch and break the loop:
-                  shouldSwitch = true;
-                  break;
-                }
-              } else if (dir == "desc") {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                  // If so, mark as a switch and break the loop:
-                  shouldSwitch = true;
-                  break;
-                }
-              }
-            }
-            if (shouldSwitch) {
-              /* If a switch has been marked, make the switch
-              and mark that a switch has been done: */
-              rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-              switching = true;
-              // Each time a switch is done, increase this count by 1:
-              switchcount ++;
-            } else {
-              /* If no switching has been done AND the direction is "asc",
-              set the direction to "desc" and run the while loop again. */
-              if (switchcount == 0 && dir == "asc") {
-                dir = "desc";
-                switching = true;
-              }
-            }
-          }
-          for (let i = 1; i < rows.length; i++) {
-            rows[i].getElementsByTagName("td")[0].innerText = i;
-          }
-        }
-    </script>
 {% endblock %}

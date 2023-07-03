@@ -253,10 +253,6 @@ def luu_cau_tra_loi(traloiList, cauhoi_id):
 def xoa_cau_hoi(data):
     cauhoi_id = data['cauhoi_id']
     mycursor.execute("DELETE FROM cauhoi WHERE cauhoi_id = %s", (cauhoi_id,))
-    if data['loaicautraloi_id'] == '1':
-        mycursor.execute("DELETE FROM luachon WHERE cauhoi_id = %s", (cauhoi_id,))
-    else:
-        mycursor.execute("DELETE FROM thangdolikert WHERE cauhoi_id = %s", (cauhoi_id,))
     mydb.commit()
     print("Delete")
 
@@ -311,7 +307,6 @@ def lay_ket_qua(detai_id):
         cautralois = mycursor.fetchall()
         traloi = {}
         data = {}
-        print(phieukhaosat_id)
         for cautraloi in cautralois:
             cauhoi_id = cautraloi[0]
             lua_chon = cautraloi[1]
@@ -325,21 +320,18 @@ def lay_ket_qua(detai_id):
             else:
                 mycursor.execute("SELECT diem_likert FROM thangdolikert WHERE cauhoi_id = %s", (cauhoi_id,))
                 result = mycursor.fetchall()[lua_chon]
-                print(result)
                 tra_loi = result[0]
                 data[ma_cau_hoi] = tra_loi
             traloi[ma_cau_hoi] = tra_loi
         ketqua['tra_loi'] = traloi
         ketquas.append(ketqua)
-        dt.append(data)
-    luu_csv(dt)
+        dt.append(traloi)
+    luu_csv('data.csv', dt)
     return ketquas
 
 
-def luu_csv(dt):
-    filename = 'data.csv'
-
-    with open(filename, mode='w', newline='') as file:
+def luu_csv(filename, dt):
+    with open(filename, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
 
         headers = dt[0].keys()
@@ -353,3 +345,121 @@ def luu_csv(dt):
 def doi_trang_thai(cauhoi_id, trang_thai):
     mycursor.execute("UPDATE cauhoi SET trang_thai = %s WHERE cauhoi_id = %s", (trang_thai, cauhoi_id))
     mydb.commit()
+
+
+def sang_loc(detai_id):
+    import datetime
+    code = '-0098-b371'  # để đánh dấu đề tài nào là đề tài mới hihi
+    mycursor.execute("SELECT * FROM detai WHERE detai_id = %s", (detai_id,))
+    result = mycursor.fetchall()[0]
+    user_id = result[1]
+    token = result[7]
+    # Kiểm tra xem có phải đề tài mới tạo không
+    if token.endswith(code):
+        mycursor.execute("SELECT * FROM cauhoi WHERE detai_id = %s", (detai_id,))
+    else:
+        new_token = token + code
+        mycursor.execute("SELECT token FROM detai WHERE user_id = %s", (user_id,))
+        tokens = mycursor.fetchall()
+        exist = False
+        for tk in tokens:
+            if new_token == tk[0]:
+                exist = True
+        if exist:  # Đề tài mới tồn tại rồi
+            mycursor.execute("SELECT * FROM detai WHERE token = %s", (new_token,))
+            detai_id = mycursor.fetchall()[0][0]
+            mycursor.execute("SELECT * FROM cauhoi WHERE detai_id = %s", (detai_id,))
+        else: # Đề tài mới chưa tồn tại
+            ten_de_tai = result[3] + ' (thí điểm)'
+            mycursor.execute("UPDATE detai SET ten_de_tai = %s WHERE detai_id = %s", (ten_de_tai, detai_id))
+            new_detai = [result[x] for x in range(1, len(result)-1)]
+            new_detai[4] = datetime.date.today()
+            new_detai[6] = new_detai[6] + code
+            # Tạo đề tài mới
+            sql = "INSERT INTO detai(user_id, ma_de_tai, ten_de_tai, nguoi_thuc_hien, ngay_thuc_hien, mo_ta, token) VALUES (" \
+                  "%s, %s, %s, %s, %s, %s, %s) "
+            mycursor.execute(sql, tuple(new_detai))
+            new_detai_id = mycursor.lastrowid
+            # Tạo nhóm câu hỏi cho đề tài mới
+            mycursor.execute("SELECT nhomcauhoi_id, ma_nhom, ten_nhom FROM nhomcauhoi WHERE detai_id = %s", (detai_id,))
+            results = mycursor.fetchall()
+            for r in results:
+                new_r = [new_detai_id]
+                new_r.append(r[1])
+                new_r.append(r[2])
+                mycursor.execute("INSERT INTO nhomcauhoi(detai_id, ma_nhom, ten_nhom) VALUES (%s, %s, %s)", tuple(new_r))
+                nhomcauhoi_id_chenh_lech = int(mycursor.lastrowid) - int(r[0])
+            # Tạo câu hỏi cho đề tài mới
+            mycursor.execute("SELECT cauhoi_id, nhomcauhoi_id, ma_cau_hoi, loaicautraloi_id, noi_dung, trang_thai FROM cauhoi WHERE "
+                             "detai_id = %s", (detai_id,))
+            results = mycursor.fetchall()
+            for row in results:
+                new_row = [new_detai_id]
+                new_row.append(int(row[1])+nhomcauhoi_id_chenh_lech)
+                for i in range(2, len(row)):
+                    new_row.append(row[i])
+                mycursor.execute("""INSERT INTO cauhoi(detai_id, nhomcauhoi_id, ma_cau_hoi, loaicautraloi_id, noi_dung, trang_thai)
+                                VALUES (%s, %s, %s, %s, %s, %s)""", tuple(new_row))
+                new_cauhoi_id = mycursor.lastrowid
+                cauhoi_id = row[0]
+                loaicautraloi_id = row[3]
+                if str(loaicautraloi_id) == '1':
+                    mycursor.execute("SELECT noi_dung FROM luachon WHERE cauhoi_id = %s", (cauhoi_id,))
+                    luachons = mycursor.fetchall()
+                    for luachon in luachons:
+                        mycursor.execute("INSERT INTO luachon(cauhoi_id, noi_dung) VALUES (%s, %s)", (new_cauhoi_id, luachon[0]))
+                else:
+                    mycursor.execute("SELECT diem_likert, noi_dung FROM thangdolikert WHERE cauhoi_id = %s", (cauhoi_id,))
+                    likerts = mycursor.fetchall()
+                    for likert in likerts:
+                        mycursor.execute("INSERT INTO thangdolikert(cauhoi_id, diem_likert, noi_dung) VALUES (%s, %s, %s)",
+                                         (new_cauhoi_id, likert[0], likert[1]))
+            mydb.commit()
+            mycursor.execute("SELECT * FROM cauhoi WHERE detai_id = %s", (new_detai_id,))
+            print("Donee")
+    result = mycursor.fetchall()
+    columns = [column[0] for column in mycursor.description]
+    records = []
+    for row in result:
+        record = {}
+        for i in range(len(columns)):
+            record[columns[i]] = row[i]
+        records.append(record)
+    return records
+
+
+def lay_cau_hoi_theo_de_tai(detai_id):
+    mycursor.execute("SELECT * FROM cauhoi WHERE detai_id = %s", (detai_id,))
+    result = mycursor.fetchall()
+    columns = [column[0] for column in mycursor.description]
+    records = []
+    for row in result:
+        record = {}
+        for i in range(len(columns)):
+            record[columns[i]] = row[i]
+        records.append(record)
+    return records
+
+
+def luu_cau_hoi_sang_loc(data):
+    cauhoi_id = data['cauhoi_id']
+    noi_dung = data['noi_dung']
+    values = (noi_dung, cauhoi_id)
+    sql = "UPDATE cauhoi SET noi_dung = %s WHERE cauhoi_id = %s"
+    mycursor.execute(sql, values)
+    mydb.commit()
+
+
+def lay_loai_bien(detai_id):
+    mycursor.execute("SELECT * FROM cauhoi WHERE detai_id = %s", (detai_id,))
+    result = mycursor.fetchall()
+    bienmota = []
+    biendoclap = []
+    for cauhoi in result:
+        ma_cau_hoi = cauhoi[3]
+        loaicautraloi_id = cauhoi[4]
+        if str(loaicautraloi_id) == '1':
+            bienmota.append(ma_cau_hoi)
+        else:
+            biendoclap.append(ma_cau_hoi)
+    return {'bienmota': bienmota, 'biendoclap': biendoclap}

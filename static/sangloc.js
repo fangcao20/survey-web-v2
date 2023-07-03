@@ -1,24 +1,6 @@
 var detai_id = localStorage.getItem('detai_id').replaceAll('"', '');
 var detai = {'detai_id':detai_id};
-sendDataTaoCauHoi(detai, 'chondetai')
-function sendDataTaoCauHoi(data, action) {
-    $.ajax({
-      url: '/taocauhoi',
-      method: 'POST',
-      data: JSON.stringify({data: data, action: action}),
-      contentType: 'application/json',
-      success: function(response) {
-        if (response.cauhoiList) {
-            console.log(response);
-            hienCauHoi(response.cauhoiList);
-        }
-
-      },
-      error: function(xhr, status, error) {
-        console.log(error);
-      }
-    });
-};
+sendDataSangLoc(detai, 'chondetai')
 
 function sendDataSangLoc(data, action) {
     $.ajax({
@@ -29,7 +11,11 @@ function sendDataSangLoc(data, action) {
       success: function(response) {
         if (response.cauhoiList) {
             console.log(response);
+            if (response.cauhoiList[0]['detai_id'].toString() !== detai_id) {
+                localStorage.setItem('detai_id', JSON.stringify(response.cauhoiList[0]['detai_id']));
+            }
             hienCauHoi(response.cauhoiList);
+
         }
 
       },
@@ -59,12 +45,10 @@ function hienCauHoi(cauhoiList) {
         for (bien of bienXoa) {
             if (bien === cauhoi['ma_cau_hoi']) {
                 htmlXoa += `
-                    <tr id="${cauhoi['cauhoi_id']}">
-                        <td style="color: #d64b4b; background: #fff2cc;">${ixoa}</td>
-                        <td style="color: #d64b4b; background: #fff2cc;"><input type="checkbox"></td>
-                        <td style="color: #d64b4b; background: #fff2cc;">${cauhoi['ma_cau_hoi']}</td>
-                        <td style="color: #d64b4b; background: #fff2cc;">${cauhoi['noi_dung']}</td>
-                        <td style="color: #d64b4b; background: #fff2cc;">${cauhoi['trang_thai']}</td>
+                    <tr id="${cauhoi['cauhoi_id']}" style="background: #ffe5ea; color: #d64b4b" onclick="chonCauHoi(${cauhoi['cauhoi_id']})">
+                        <td>${ixoa}</td>
+                        <td>${cauhoi['ma_cau_hoi']}</td>
+                        <td>${cauhoi['noi_dung']}</td>
                     </tr>
                 `;
                 xoa = true;
@@ -75,10 +59,8 @@ function hienCauHoi(cauhoiList) {
             htmlKhaoSat += `
                 <tr id="${cauhoi['cauhoi_id']}">
                     <td>${ikhaosat}</td>
-                    <td><input type="checkbox"></td>
                     <td>${cauhoi['ma_cau_hoi']}</td>
                     <td>${cauhoi['noi_dung']}</td>
-                    <td>${cauhoi['trang_thai']}</td>
                 </tr>
             `;
             ikhaosat++;
@@ -86,29 +68,44 @@ function hienCauHoi(cauhoiList) {
     }
     document.getElementById('bodyCauHoiTamXoa').innerHTML = htmlXoa;
     document.getElementById('bodyCauHoiKhaoSat').innerHTML = htmlKhaoSat;
-    console.log(htmlKhaoSat);
+    let rows = document.querySelectorAll('#bodyCauHoiTamXoa > tr');
+    let exist = [];
+    for (row of rows) {
+        let cells = row.getElementsByTagName('td');
+        let ma_cau_hoi = cells[1].innerHTML;
+        exist.push(ma_cau_hoi)
+    }
+    let differentElements = bienXoa.filter(element => !exist.includes(element));
+    if (differentElements.length > 0) {
+        document.getElementById('thongbao').innerHTML = '*' + differentElements.join(', ') + ' đã bị xóa.';
+    }
 }
 
-function chonCauHoi() {
-    let checked = document.querySelector('input[type=checkbox]:checked');
-    let tr = checked.parentNode.parentNode;
-    let cauhoi_id = tr.id;
-    return cauhoi_id;
+function chonCauHoi(n) {
+    let rows = document.querySelectorAll('#bodyCauHoiTamXoa > tr');
+    for (row of rows) {
+        if (row.id === `${n}`) {
+            row.classList.add('selected');
+        } else {
+            if (row.classList.contains('selected')) {
+                row.classList.remove('selected');
+            }
+        }
+    }
 }
 
 function sua_cau_hoi() {
-    let cauhoi_id = chonCauHoi();
-    let tr = document.getElementById(cauhoi_id);
-    let tds = tr.getElementsByTagName('td');
-    let noi_dung = tds[3].innerHTML;
+    let row = document.getElementsByClassName('selected')[0];
+    let tds = row.getElementsByTagName('td');
+    let noi_dung = tds[2].innerHTML;
     document.getElementById('suaCauHoi').value = noi_dung;
     document.getElementById('divSuaCauHoi').style.display = "block";
 }
 
-function an_cau_hoi() {
-    let cauhoi_id = chonCauHoi();
-    let tr = document.getElementById(cauhoi_id);
-    let tds = tr.getElementsByTagName('td');
+function xoa_cau_hoi() {
+    let row = document.getElementsByClassName('selected')[0];
+    let cauhoi_id = row.id;
+    let tds = row.getElementsByTagName('td');
     let ma_cau_hoi = tds[2].innerHTML;
     if (bienXoa.includes(ma_cau_hoi)) {
         let index = bienXoa.indexOf(ma_cau_hoi);
@@ -116,19 +113,31 @@ function an_cau_hoi() {
         localStorage.setItem('bien_xoa', JSON.stringify(bienXoa));
     }
     let data = {'cauhoi_id': cauhoi_id, 'detai_id': detai_id};
-    sendDataSangLoc(data, 'ancauhoi');
+    sendDataSangLoc(data, 'xoacauhoi');
 }
 
-function hien_cau_hoi() {
-    let cauhoi_id = chonCauHoi();
-    let tr = document.getElementById(cauhoi_id);
-    let tds = tr.getElementsByTagName('td');
-    let ma_cau_hoi = tds[2].innerHTML;
+function giu_cau_hoi() {
+    let row = document.getElementsByClassName('selected')[0];
+    let cauhoi_id = row.id;
+    let tds = row.getElementsByTagName('td');
+    let ma_cau_hoi = tds[1].innerHTML;
+    let noi_dung = tds[2].innerHTML;
     if (bienXoa.includes(ma_cau_hoi)) {
         let index = bienXoa.indexOf(ma_cau_hoi);
         bienXoa.splice(index, 1);
         localStorage.setItem('bien_xoa', JSON.stringify(bienXoa));
     }
-    let data = {'cauhoi_id': cauhoi_id, 'detai_id': detai_id};
-    sendDataSangLoc(data, 'hiencauhoi');
+    let data = {'cauhoi_id': cauhoi_id, 'detai_id': detai_id, 'noi_dung': noi_dung};
+    sendDataSangLoc(data, 'luucauhoi');
+}
+
+function luu_cau_hoi() {
+    let row = document.getElementsByClassName('selected')[0];
+    let cauhoi_id = row.id;
+    let noi_dung = document.getElementById('suaCauHoi').value;
+    let cells = row.cells;
+    cells[2].innerHTML = noi_dung;
+    row.style.background = 'white';
+    row.style.color = 'black';
+    document.getElementById('divSuaCauHoi').style.display = 'none';
 }

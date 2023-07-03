@@ -120,9 +120,8 @@ function hienBangNhomCauHoi(nhomcauhoiList) {
     for (nhomcauhoi of nhomcauhoiList) {
         i++;
         html += `
-            <tr>
+            <tr id="${nhomcauhoi['nhomcauhoi_id']}" onclick="chon_nhom_cau_hoi(${nhomcauhoi['nhomcauhoi_id']})">
                 <td>${i}</td>
-                <td><input type="checkbox"></td>
                 <td>${nhomcauhoi['ma_nhom']}</td>
                 <td>${nhomcauhoi['ten_nhom']}</td>
                 <td style="display: none">${nhomcauhoi['nhomcauhoi_id']}</td>
@@ -156,47 +155,46 @@ function luu_nhom_cau_hoi() {
         sendDataTaoCauHoi(nhomcauhoi, 'lưu nhóm câu hỏi');
 
         huy_nhom_cau_hoi();
-        alert("Lưu nhóm câu hỏi thành công!");
     }
 };
 
-function chon_nhom_cau_hoi() {
-    let table = document.getElementById('tableNhomCauHoi');
-    let checkboxes = table.querySelectorAll('input[type="checkbox"]:checked');
-    if (checkboxes.length === 0) {
-        alert("Vui lòng chọn 1 nhóm câu hỏi.");
-    } else if (checkboxes.length > 1) {
-        alert("Vui lòng chỉ chọn 1 nhóm câu hỏi.");
-    } else {
-        let selectedRow = {};
-
-        checkboxes.forEach(function(checkbox) {
-          let row = checkbox.closest('tr');
-          let cells = row.cells;
-          selectedRow['ma_nhom'] = cells[2].innerText;
-          selectedRow['ten_nhom'] = cells[3].innerText;
-          selectedRow['nhomcauhoi_id'] = cells[4].innerText;
-        });
-
-        if (localStorage.getItem('detai_id')) {
-            selectedRow['detai_id'] = localStorage.getItem('detai_id');
-        };
-
-        return selectedRow;
+function chon_nhom_cau_hoi(n) {
+    let rows = document.querySelectorAll('#bodyTableNhomCauHoi > tr');
+    for (let r of rows) {
+        if (r.id == `${n}`) {
+            r.classList.add('selected');
+        } else {
+            if (r.classList.contains('selected')) {
+                r.classList.remove('selected');
+            }
+        }
     }
-};
+    let row = document.getElementById(`${n}`);
+    let cells = row.cells;
+    let selectedRow = {};
+    selectedRow['ma_nhom'] = cells[1].innerText;
+    selectedRow['ten_nhom'] = cells[2].innerText;
+    selectedRow['nhomcauhoi_id'] = cells[3].innerText;
+
+    if (localStorage.getItem('detai_id')) {
+        selectedRow['detai_id'] = localStorage.getItem('detai_id');
+    };
+
+    return selectedRow;
+}
 
 function sua_nhom_cau_hoi() {
-    selectedRow = chon_nhom_cau_hoi();
+    let row = document.getElementsByClassName('selected')[0];
+    let selectedRow = chon_nhom_cau_hoi(row.id);
     document.getElementById('ten_nhom').value = selectedRow['ten_nhom'];
     document.getElementById('ma_nhom').value = selectedRow['ma_nhom'];
     localStorage.setItem('nhomcauhoi_id', JSON.stringify(parseInt(selectedRow['nhomcauhoi_id'])));
 };
 
 function xoa_nhom_cau_hoi() {
-    selectedRow = chon_nhom_cau_hoi();
+    let row = document.getElementsByClassName('selected')[0];
+    let selectedRow = chon_nhom_cau_hoi(row.id);
     sendDataTaoCauHoi(selectedRow, 'xóa nhóm câu hỏi');
-    alert("Xóa nhóm câu hỏi thành công!");
 }
 
 function huy_nhom_cau_hoi() {
@@ -228,12 +226,10 @@ function hienCauHoi(cauhoiList) {
     let html = '';
     for (let i = 0; i < numCauHoi; i++) {
         html += `
-            <tr>
+            <tr id="${cauhoiList[i]['cauhoi_id']}" onclick="chon_cau_hoi(${cauhoiList[i]['cauhoi_id']})">
                 <td>${i + 1}</td>
-                <td><input type="radio" name="cauhoi"></td>
                 <td>${cauhoiList[i]['ma_cau_hoi']}</td>
                 <td>${cauhoiList[i]['noi_dung']}</td>
-                <td>${cauhoiList[i]['trang_thai']}</td>
                 <td style="display: none">${cauhoiList[i]['cauhoi_id']}</td>
                 <td style="display: none">${cauhoiList[i]['loaicautraloi_id']}</td>
                 <td style="display: none">${cauhoiList[i]['nhomcauhoi_id']}</td>
@@ -424,41 +420,39 @@ function luu_cau_hoi() {
         sendDataTaoCauHoi(cauhoi, 'lưu câu hỏi');
 
         huy_cau_hoi();
-        alert("Lưu câu hỏi thành công!");
     }
 };
 
-function chon_cau_hoi() {
-    let table = document.getElementById('tableCauHoi');
-    let checkboxes = table.querySelectorAll('input[type="radio"]:checked');
-    if (checkboxes.length === 0) {
-        alert("Vui lòng chọn 1 câu hỏi.");
-    } else if (checkboxes.length > 1) {
-        alert("Vui lòng chỉ chọn 1 câu hỏi.");
-    } else {
-        let selectedRow = {};
-
-        checkboxes.forEach(function(checkbox) {
-          let row = checkbox.closest('tr');
-          let cells = row.cells;
-          selectedRow['ma_cau_hoi'] = cells[2].innerText;
-          selectedRow['noi_dung'] = cells[3].innerText;
-          selectedRow['trang_thai'] = cells[4].innerText;
-          selectedRow['cauhoi_id'] = cells[5].innerText;
-          selectedRow['loaicautraloi_id'] = cells[6].innerText;
-          selectedRow['nhomcauhoi_id'] = cells[7].innerText;
-        });
-
-        if (localStorage.getItem('detai_id')) {
-            selectedRow['detai_id'] = localStorage.getItem('detai_id');
-        };
-
-        return selectedRow;
+function chon_cau_hoi(n) {
+    let rows = document.querySelectorAll('#bodyTableCauHoi > tr');
+    for (let r of rows) {
+        if (r.id == `${n}`) {
+            r.classList.add('selected');
+        } else {
+            if (r.classList.contains('selected')) {
+                r.classList.remove('selected');
+            }
+        }
     }
-};
+    let row = document.getElementById(`${n}`);
+    let cells = row.cells;
+    let selectedRow = {};
+    selectedRow['ma_cau_hoi'] = cells[1].innerText;
+    selectedRow['noi_dung'] = cells[2].innerText;
+    selectedRow['cauhoi_id'] = cells[3].innerText;
+    selectedRow['loaicautraloi_id'] = cells[4].innerText;
+    selectedRow['nhomcauhoi_id'] = cells[5].innerText;
+
+    if (localStorage.getItem('detai_id')) {
+        selectedRow['detai_id'] = localStorage.getItem('detai_id');
+    };
+
+    return selectedRow;
+}
 
 function sua_cau_hoi() {
-    selectedRow = chon_cau_hoi();
+    let row = document.getElementsByClassName('selected')[0];
+    let selectedRow = chon_cau_hoi(row.id);
     document.getElementById('ma_cau_hoi').value = selectedRow['ma_cau_hoi'];
     document.getElementById('noidung_cauhoi').value = selectedRow['noi_dung'];
     document.getElementById('ma_cau_hoi').value = selectedRow['ma_cau_hoi'];
@@ -539,9 +533,9 @@ function hienTraLoi(traloiList) {
 }
 
 function xoa_cau_hoi() {
-    selectedRow = chon_cau_hoi();
+    let row = document.getElementsByClassName('selected')[0];
+    let selectedRow = chon_cau_hoi(row.id);
     sendDataTaoCauHoi(selectedRow, 'xóa câu hỏi');
-    alert("Xóa câu hỏi thành công!");
 }
 
 function lay_cau_tra_loi(loai_cau_tra_loi) {
@@ -570,10 +564,6 @@ function huy_cau_hoi() {
     document.getElementById('ma_cau_hoi').value = selectedOptionText.split(' - ')[0];
     if (localStorage.getItem('cauhoi_id')) {
         localStorage.removeItem('cauhoi_id');
-    }
-    let checkeds = document.querySelectorAll('#bodyTableCauHoi > tr > td > input[type=radio]')
-    for (checked of checkeds) {
-        checked.checked = false;
     }
     if (document.getElementById('chon_loaicautraloi').value == 'Trắc nghiệm') {
         let textareas = [];

@@ -22,15 +22,14 @@
         </form>
       </div>
       <div class="container">
-        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Tìm kiếm đề tài...">
+        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Tìm kiếm nhóm câu hỏi...">
         <div style="height: 300px; overflow: auto">
-          <table class="table" id="tableNhomCauHoi">
-            <thead>
+          <table class="table table-hover" id="tableNhomCauHoi">
+            <thead style="background: #eeeeee">
               <tr>
                 <th style="width: 50px">STT</th>
-                <th>Chọn</th>
-                <th onclick="sortTable(2)">Mã nhóm</th>
-                <th onclick="sortTable(3)">Tên nhóm</th>
+                <th onclick="sortTable(1)">Mã nhóm</th>
+                <th onclick="sortTable(2)">Tên nhóm</th>
                 <th style="display: none">ID</th>
               </tr>
             </thead>

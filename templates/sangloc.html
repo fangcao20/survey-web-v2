@@ -35,10 +35,8 @@
                     <thead style="background: #eeeeee">
                         <tr>
                             <th>STT</th>
-                            <th>Chọn</th>
                             <th>Mã câu hỏi</th>
                             <th>Nội dung</th>
-                            <th>Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody id="bodyCauHoiKhaoSat"></tbody>
@@ -46,18 +44,17 @@
             </div>
             <div id="cauHoiTamXoa" class="col-6"  style="height: 500px; overflow: auto">
                 <h6>Danh sách câu hỏi tạm xóa</h6>
-                <table class="table table-bordered table-hover table-sm">
+                <table class="table table-bordered table-hover table-sm" style="margin-bottom: 2px">
                     <thead style="background: #eeeeee">
                         <tr>
                             <th>STT</th>
-                            <th>Chọn</th>
                             <th>Mã câu hỏi</th>
                             <th>Nội dung</th>
-                            <th>Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody id="bodyCauHoiTamXoa"></tbody>
                 </table>
+                <span id="thongbao" class="fst-italic" style="font-size: 13px"></span>
                 <div id="divSuaCauHoi" style="display: none">
                     <h6>Chỉnh sửa nội dung câu hỏi</h6>
                     <textarea class="form-control mb-2" id="suaCauHoi" name="mo_ta" style="height: 100px;"></textarea>
@@ -65,13 +62,12 @@
                 </div>
             </div>
         </div>
-        <div id="button_group" class="d-flex mb-2 mt-3">
+        <div id="button_group" class="d-flex mb-2 mt-5">
             <div class="container ms-auto">
-              <button type="button" class="btn btn-success" style="width: 100px" onclick="sua_cau_hoi()">Sửa</button>
-              <button type="button" class="btn btn-secondary" style="width: 100px" onclick="an_cau_hoi()">Ẩn</button>
-              <button type="button" class="btn btn-primary" style="width: 100px" onclick="hien_cau_hoi()">Hiện</button>
+              <button type="button" class="btn btn-primary" style="width: 100px" onclick="sua_cau_hoi()">Sửa</button>
               <button type="button" class="btn btn-danger" style="width: 100px" onclick="xoa_cau_hoi()">Xóa</button>
-              <button type="button" class="btn btn-primary" style="min-width: 170px; margin-left: 200px" onclick="window.open('/danhgiachinhthuc', '_blank')">Đánh giá chính thức</button>
+              <button type="button" class="btn btn-success" style="width: 100px" onclick="giu_cau_hoi()">Giữ lại</button>
+              <button type="button" class="btn btn-primary" style="min-width: 170px; margin-left: 200px" onclick="window.open('/khaosat', '_blank')">Khảo sát</button>
             </div>
           </div>
     </div>
