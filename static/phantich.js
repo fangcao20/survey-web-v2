@@ -589,3 +589,14 @@ function sendDataCT(data, action) {
     }
   });
 }
+
+function chon_toan_bo() {
+    let checkbox = document.querySelector('#phanloaibien > div.danhsachbien > span > input[type=checkbox]');
+    if (checkbox.checked) {
+        let biens = document.querySelectorAll('#bodyTableDanhSachBien > p');
+        for (let bien of biens) {
+            let parent = document.getElementById('biendoclap');
+            parent.appendChild(bien);
+        }
+    }
+}

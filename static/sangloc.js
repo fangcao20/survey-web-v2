@@ -10,12 +10,10 @@ function sendDataSangLoc(data, action) {
       contentType: 'application/json',
       success: function(response) {
         if (response.cauhoiList) {
-            console.log(response);
             if (response.cauhoiList[0]['detai_id'].toString() !== detai_id) {
                 localStorage.setItem('detai_id', JSON.stringify(response.cauhoiList[0]['detai_id']));
             }
             hienCauHoi(response.cauhoiList);
-
         }
 
       },
@@ -45,7 +43,7 @@ function hienCauHoi(cauhoiList) {
         for (bien of bienXoa) {
             if (bien === cauhoi['ma_cau_hoi']) {
                 htmlXoa += `
-                    <tr id="${cauhoi['cauhoi_id']}" style="background: #ffe5ea; color: #d64b4b" onclick="chonCauHoi(${cauhoi['cauhoi_id']})">
+                    <tr id="${cauhoi['cauhoi_id']}" class="delete" onclick="chonCauHoi(${cauhoi['cauhoi_id']})">
                         <td>${ixoa}</td>
                         <td>${cauhoi['ma_cau_hoi']}</td>
                         <td>${cauhoi['noi_dung']}</td>
@@ -114,10 +112,11 @@ function xoa_cau_hoi() {
     }
     let data = {'cauhoi_id': cauhoi_id, 'detai_id': detai_id};
     sendDataSangLoc(data, 'xoacauhoi');
+    row.remove();
 }
 
 function giu_cau_hoi() {
-    let row = document.getElementsByClassName('selected')[0];
+    let row = document.querySelector('#bodyCauHoiTamXoa > .selected');
     let cauhoi_id = row.id;
     let tds = row.getElementsByTagName('td');
     let ma_cau_hoi = tds[1].innerHTML;
@@ -129,6 +128,12 @@ function giu_cau_hoi() {
     }
     let data = {'cauhoi_id': cauhoi_id, 'detai_id': detai_id, 'noi_dung': noi_dung};
     sendDataSangLoc(data, 'luucauhoi');
+    row.remove();
+    let table = document.getElementById('bodyCauHoiKhaoSat');
+    let numRow = table.rows.length;
+    row.cells[0].innerHTML = (numRow + 1).toString();
+    row.classList.remove('delete');
+    document.getElementById('bodyCauHoiKhaoSat').appendChild(row);
 }
 
 function luu_cau_hoi() {
@@ -137,7 +142,7 @@ function luu_cau_hoi() {
     let noi_dung = document.getElementById('suaCauHoi').value;
     let cells = row.cells;
     cells[2].innerHTML = noi_dung;
-    row.style.background = 'white';
-    row.style.color = 'black';
+    row.classList.add('changed');
+    row.classList.remove('delete');
     document.getElementById('divSuaCauHoi').style.display = 'none';
 }

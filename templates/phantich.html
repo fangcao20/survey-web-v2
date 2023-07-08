@@ -141,19 +141,26 @@
       </div>
       <div id="phanloaibien" class="row mt-3" style="visibility: hidden;">
             <div class="danhsachbien">
-                <h6>Danh sách biến</h6>
+                <span style="display: inline-block;">
+                    <h6>Danh sách biến</h6>
+                    <input type="checkbox" onchange="chon_toan_bo()">
+                    <span style="margin-left: 5px;">Chọn các biến còn lại là Biến độc lập</span>
+                </span>
                 <div id="bodyTableDanhSachBien" data-draggable="target"></div>
             </div>
             <div class="bien">
                 <h6>Biến định tính</h6>
+                <span style="visibility: hidden">.</span>
                 <div id="bienmota" data-draggable="target"></div>
             </div>
             <div class="bien">
                 <h6>Biến độc lập</h6>
+                <span style="visibility: hidden">.</span>
                 <div id="biendoclap" data-draggable="target"></div>
             </div>
             <div class="bien">
                 <h6>Biến phụ thuộc</h6>
+                <span style="visibility: hidden">.</span>
                 <div id="bienphuthuoc" data-draggable="target"></div>
             </div>
       </div>

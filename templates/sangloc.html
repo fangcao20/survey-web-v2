@@ -11,6 +11,14 @@
         font-weight: 600;
         margin-bottom: 15px;
       }
+    .changed {
+        background: 'white' !important;
+        color: 'black' !important;
+    }
+    .delete {
+        background: #ffe5ea;
+        color: #d64b4b;
+    }
 {% endblock %}
 {% block nav %}
     <li class="nav-item">
@@ -58,7 +66,7 @@
                 <div id="divSuaCauHoi" style="display: none">
                     <h6>Chỉnh sửa nội dung câu hỏi</h6>
                     <textarea class="form-control mb-2" id="suaCauHoi" name="mo_ta" style="height: 100px;"></textarea>
-                    <button class="btn btn-primary" onclick="luu_cau_hoi()">Lưu</button>
+                    <button class="btn btn-primary" onclick="luu_cau_hoi()">Xong</button>
                 </div>
             </div>
         </div>

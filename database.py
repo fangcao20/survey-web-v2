@@ -1,8 +1,8 @@
 import mysql.connector as connector
 import csv
 
-mydb = connector.connect(user='root', password='Phiphi05',
-                         host='localhost',
+mydb = connector.connect(user='ysll3302i3bl6jam5qgr', password='pscale_pw_TeQqgJhCH9Z4zJgh5c2cvs7USyZaxdmjXD2ucrHfRDc',
+                         host='aws.connect.psdb.cloud',
                          database='survey-web')
 mycursor = mydb.cursor()
 
@@ -381,6 +381,7 @@ def sang_loc(detai_id):
             mycursor.execute(sql, tuple(new_detai))
             new_detai_id = mycursor.lastrowid
             # Tạo nhóm câu hỏi cho đề tài mới
+            nhomcauhoi_id_moi = []
             mycursor.execute("SELECT nhomcauhoi_id, ma_nhom, ten_nhom FROM nhomcauhoi WHERE detai_id = %s", (detai_id,))
             results = mycursor.fetchall()
             for r in results:
@@ -388,14 +389,23 @@ def sang_loc(detai_id):
                 new_r.append(r[1])
                 new_r.append(r[2])
                 mycursor.execute("INSERT INTO nhomcauhoi(detai_id, ma_nhom, ten_nhom) VALUES (%s, %s, %s)", tuple(new_r))
-                nhomcauhoi_id_chenh_lech = int(mycursor.lastrowid) - int(r[0])
+                nhomcauhoi_id_moi.append(mycursor.lastrowid)
+            print(nhomcauhoi_id_moi)
             # Tạo câu hỏi cho đề tài mới
             mycursor.execute("SELECT cauhoi_id, nhomcauhoi_id, ma_cau_hoi, loaicautraloi_id, noi_dung, trang_thai FROM cauhoi WHERE "
-                             "detai_id = %s", (detai_id,))
+                             "detai_id = %s ORDER BY nhomcauhoi_id ASC", (detai_id,))
             results = mycursor.fetchall()
+            nhomcauhoi_id_start = results[0][1]  # Lấy cái đầu tiên > nếu nhomcauhoi_id thay đổi thì thay đổi
+            # nhomcauhoi_id mới
+            index = 0;
             for row in results:
                 new_row = [new_detai_id]
-                new_row.append(int(row[1])+nhomcauhoi_id_chenh_lech)
+                if row[1] == nhomcauhoi_id_start:
+                    new_row.append(nhomcauhoi_id_moi[index])
+                else:
+                    nhomcauhoi_id_start = row[1]
+                    index += 1
+                    new_row.append(nhomcauhoi_id_moi[index])
                 for i in range(2, len(row)):
                     new_row.append(row[i])
                 mycursor.execute("""INSERT INTO cauhoi(detai_id, nhomcauhoi_id, ma_cau_hoi, loaicautraloi_id, noi_dung, trang_thai)

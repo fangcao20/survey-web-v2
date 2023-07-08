@@ -10,7 +10,6 @@ function sendData(data, action) {
       data: JSON.stringify({data: data, action: action}),
       contentType: 'application/json',
       success: function(response) {
-        console.log(response);
         if (response.nhomcauhoiList) {
             hienButtonNhomCauHoi(response.nhomcauhoiList);
         }
@@ -188,15 +187,18 @@ function gui_phieu_khao_sat() {
         thong_tin['nguoi_khao_sat'] = document.getElementById('nguoi_khao_sat').value;
 
         data['thong_tin'] = thong_tin;
-
+        checkedDict = {};
         sendData(data, 'kết quả');
         alert("Gửi thành công. Cảm ơn!");
 
         document.getElementById('ngay_khao_sat').value = '';
         document.getElementById('nguoi_khao_sat').value = '';
-        let radios = document.querySelectorAll('input[type=radio]');
-        for (radio of radios) {
-            radio.checked = false;
+        let buttons = document.querySelectorAll('#button_nhom_cau_hoi > button');
+        for (let b of buttons) {
+            b.classList.remove('btn-success');
+            b.classList.add('btn-secondary');
         }
+        document.getElementById('button_gui').style.display = 'none';
+        document.getElementById('button0').click();
     }
 }

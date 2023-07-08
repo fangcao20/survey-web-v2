@@ -373,6 +373,7 @@ def danhgiasobo():
                     return jsonify(tennhom=tennhom, nhantodaidien=nhantodaidien,
                                    soluongnhantodoclap=soluongnhantodoclap,
                                    tuongquan=tuongquan, ketquathongkemota=ketquathongkemota)
+
             return jsonify(tennhom=tennhom)
         return render_template('danhgiasobo.html')
     return redirect(url_for('dangnhap'))
@@ -392,12 +393,10 @@ def sangloc():
                     return jsonify(cauhoiList=cauhoiList)
                 if action == 'xoacauhoi':
                     xoa_cau_hoi(data)
-                    cauhoiList = lay_cau_hoi_theo_de_tai(data['detai_id'])
-                    return jsonify(cauhoiList=cauhoiList)
+                    return render_template('sangloc.html')
                 if action == 'luucauhoi':
                     luu_cau_hoi_sang_loc(data)
-                    cauhoiList = lay_cau_hoi_theo_de_tai(data['detai_id'])
-                    return jsonify(cauhoiList=cauhoiList)
+                    return render_template('sangloc.html')
             return render_template('sangloc.html')
         return redirect(url_for('phantich'))
     return redirect(url_for('dangnhap'))
@@ -406,6 +405,69 @@ def sangloc():
 @app.route('/danhgiachinhthuc', methods=['POST', 'GET'])
 def danhgiachinhthuc():
     if 'user_id' in session:
+        if request.method == 'POST':
+            with open('datadoclap.csv', 'r', encoding="utf8") as file:
+                reader = csv.reader(file)
+                rowsdoclap = list(reader)
+
+            with open('dataphuthuoc.csv', 'r', encoding="utf8") as file:
+                reader = csv.reader(file)
+                rowsphuthuoc = list(reader)
+
+            rows = []
+            for i in range(len(rowsphuthuoc)):
+                rows.append(rowsdoclap[i] + rowsphuthuoc[i])
+
+            dataDict = [{key: int(value) for key, value in zip(rows[0], sublist) if value != ''} for sublist in
+                        rows[1:]]
+            data = request.get_json()
+            nhomcauhois = data['nhomcauhoi']
+            cronbachList = []
+            efaList = []
+            ketquathongkemota = thongkemota()
+            for nhom in nhomcauhois:
+                cronbach_result = cronbach(dataDict, nhom)
+                cronbachList.append({
+                    'cronbach_total': cronbach_result[0][0],
+                    'cronbach_table': cronbach_result[1],
+                    'soluongbien': cronbach_result[2]
+                })
+            dataDict1 = [{key: int(value) for key, value in zip(rowsdoclap[0], sublist) if value != ''} for
+                         sublist in
+                         rowsdoclap[1:]]
+
+            efa_result = efa(dataDict1)
+            efaList.append({
+                'p_value': efa_result['p_value'],
+                'kmo': efa_result['kmo'],
+                'ev': efa_result['ev'],
+                'binhphuong': efa_result['binhphuong'],
+                'tile': efa_result['tile'],
+                'tichluy': efa_result['tichluy'],
+                'comau': efa_result['comau']
+            })
+
+            if 'matran' in efa_result:
+                efaList[0]['matran'] = efa_result['matran']
+            if len(rowsphuthuoc[0]) > 0:
+                dataDict2 = [{key: int(value) for key, value in zip(rowsphuthuoc[0], sublist) if value != ''}
+                             for sublist in
+                             rowsphuthuoc[1:]]
+                efa_result = efa(dataDict2)
+                efaList.append({
+                    'p_value': efa_result['p_value'],
+                    'kmo': efa_result['kmo'],
+                    'ev': efa_result['ev'],
+                    'binhphuong': efa_result['binhphuong'],
+                    'tile': efa_result['tile'],
+                    'tichluy': efa_result['tichluy'],
+                    'comau': efa_result['comau']
+                })
+
+                if 'matran' in efa_result:
+                    efaList[1]['matran'] = efa_result['matran']
+            return jsonify(cronbachList=cronbachList, efaList=efaList, ketquathongkemota=ketquathongkemota)
+
         return render_template('danhgiachinhthuc.html')
     return redirect(url_for('dangnhap'))
 

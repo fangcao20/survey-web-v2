@@ -11,7 +11,6 @@ var bienXoa = [];
 var ketquahoiquy = [];
 var ketquakhacbiet = [];
 var ketquathongkemota = {};
-var changed = false;
 sendDataSoBo(data, 'nhomcauhoi');
 sendDataSoBo({'bien_xoa': []}, 'xoabien');
 function sendData(data, action) {
@@ -54,7 +53,6 @@ function sendDataSoBo(data, action) {
           document.getElementById('comau').innerHTML = response.comau;
           document.getElementById('soluongbien').innerHTML = response.soluongbien;
           hienthi_cronbach(response.cronbach_table);
-          changed = true;
 
           let ev = response.ev;
           let binhphuong = response.binhphuong;
@@ -133,7 +131,6 @@ function hienNhomCauHoi(tennhom) {
 
 var nhomcauhoi;
 function chon_nhom() {
-    changed = false;
     let select = document.getElementById('chonnhomcauhoi');
     let option = select.options[select.selectedIndex];
     nhomcauhoi = option.text;
@@ -488,7 +485,7 @@ function hienthiketquakhacbiet(ketquakhacbiet) {
       data: {
         labels: description[0],
         datasets: [{
-          label: Object.keys(ketqua)[i-1],
+          label: Object.keys(ketqua)[v-1],
           data: means, // Các giá trị dữ liệu
           backgroundColor: 'rgba(0, 123, 255, 0.5)', // Màu nền của vùng dữ liệu
           borderColor: 'rgba(0, 123, 255, 1)', // Màu viền của vùng dữ liệu
@@ -622,39 +619,208 @@ function hienfrequency() {
     });
 }
 
-function exportHTML(){
-    var html, link, blob, url, css;
+function exportHTML() {
+    let options = document.querySelectorAll('#chonnhomcauhoi > option');
+    let opts = [];
+    for (let o of options) {
+        opts.push(o.value);
+    }
+    let data = {'nhomcauhoi': opts};
+    if (Object.keys(Chart.instances).length > 0) {
+        for (key of Object.keys(Chart.instances)) {
+            Chart.instances[key].destroy();
+        }
+    }
+    sendDataChinhThuc(data);
+}
 
-   // EU A4 use: size: 841.95pt 595.35pt;
-   // US Letter use: size:11.0in 8.5in;
+function xuatKetQua(css, html) {
+  var hlink, blob, url;
+  blob = new Blob(['\ufeff', css + html], {
+  type: 'application/msword'
+  });
+  url = URL.createObjectURL(blob);
+  link = document.createElement('A');
+  link.href = url;
+  link.download = 'Document';
+  document.body.appendChild(link);
+  if (navigator.msSaveOrOpenBlob) {
+    navigator.msSaveOrOpenBlob(blob, 'Document.doc'); // IE10-11
+  } else {
+    link.click(); // other browsers
+  }
+  document.body.removeChild(link);
+}
 
-   css = (
-     '<style>' +
-     'table{border-collapse:collapse;}td, th{border:1px gray solid;padding:2px;}'+
-     '</style>'
-   );
-   var options = document.getElementsByTagName('option');
-   var html;
-   html = document.getElementById('hienthicronbach').innerHTML;
-   for (option of options) {
-     let value = option.value;
-     $('#chonnhomcauhoi').val(value).trigger('change');
-     if (changed) {
-        html += document.getElementById('hienthicronbach').innerHTML;
-     }
-     console.log(value);
-   }
-   blob = new Blob(['\ufeff', css + html], {
-     type: 'application/msword'
-   });
-   url = URL.createObjectURL(blob);
-   link = document.createElement('A');
-   link.href = url;
-   // Set default file name.
-   // Word will append file extension - do not add an extension here.
-   link.download = 'Document';
-   document.body.appendChild(link);
-   if (navigator.msSaveOrOpenBlob ) navigator.msSaveOrOpenBlob( blob, 'Document.doc'); // IE10-11
-   		else link.click();  // other browsers
-   document.body.removeChild(link);
+function sendDataChinhThuc(data) {
+  $.ajax({
+    url: '/danhgiachinhthuc',
+    method: 'POST',
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    success: function(response) {
+      var css = (
+        '<style>' +
+        'table{border-collapse:collapse;}td, th{border:1px gray solid;padding:2px;}' +
+        '</style>'
+      );
+      var htmlXuat = '';
+      var cronbach = response.cronbachList;
+      for (let i=0; i<cronbach.length; i++) {
+          cronbachalalpha = cronbach[i].cronbach_total.toFixed(3);
+          document.getElementById('crbalpha').innerHTML = cronbachalalpha;
+          if (cronbachalalpha < 0.7){
+            document.getElementById('crbalpha').style.backgroundColor = '#ffe5ea';
+            document.getElementById('crbalpha').style.color = '#d64b4b';
+          } else {
+            document.getElementById('crbalpha').style.backgroundColor = 'white';
+            document.getElementById('crbalpha').style.color = 'black';
+          };
+          document.getElementById('soluongbien').innerHTML = cronbach[i].soluongbien;
+          hienthi_cronbach(cronbach[i].cronbach_table);
+          htmlXuat += document.querySelector('#hienthicronbach > table').outerHTML;
+          htmlXuat += document.getElementById('tableCron').outerHTML;
+      }
+      var efa = response.efaList;
+      for (let i=0; i<efa.length; i++) {
+          let ev = efa[i].ev;
+          let binhphuong = efa[i].binhphuong;
+          let tile = efa[i].tile;
+          let tichluy = efa[i].tichluy;
+          let factorNum = binhphuong.length;
+          let html = '';
+          for (let factor = 0; factor < factorNum - 1; factor++) {
+            html += `
+                <tr>
+                    <th scope="row">${factor + 1}</th>
+                    <td>${parseFloat(ev[factor]).toFixed(3)}</td>
+                    <td>${parseFloat(binhphuong[factor]).toFixed(3)}</td>
+                    <td>${parseFloat(tile[factor]).toFixed(3)}</td>
+                    <td>${parseFloat(tichluy[factor]).toFixed(3)}</td>
+                </tr>
+            `;
+
+          };
+          factor = factorNum - 1;
+          html += `
+            <tr>
+                <th scope="row">${factor + 1}</th>
+                <td style="color: #d64b4b; background: #fff2cc;">${parseFloat(ev[factor]).toFixed(3)}</td>
+                <td>${parseFloat(binhphuong[factor]).toFixed(3)}</td>
+                <td>${parseFloat(tile[factor]).toFixed(3)}</td>
+                <td style="color: #d64b4b; background: #fff2cc;">${parseFloat(tichluy[factor]).toFixed(3)}</td>
+            </tr>
+          `;
+          html += `
+            <tr>
+                <th scope="row">${ev.length}</th>
+                <td>${parseFloat(ev[ev.length - 1]).toFixed(3)}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+          `;
+          document.getElementById('bodyphuongsai').innerHTML = html;
+          document.getElementById('kmo').innerHTML = parseFloat(efa[i].kmo).toFixed(3);
+          document.getElementById('bartlett').innerHTML = parseFloat(efa[i].p_value).toFixed(3);
+          htmlXuat += document.querySelector('#hienthiefa > table').outerHTML;
+          htmlXuat += document.querySelector('#hienthiefa > div:nth-child(5) > table').outerHTML;
+          if (efa[i].matran) {
+            document.getElementById('matranxoay').style.display = 'block';
+            hienthimatranxoay(efa[i].matran, factorNum);
+            htmlXuat += document.querySelector('#matranxoay').innerHTML;
+          } else {
+            document.getElementById('matranxoay').style.display = 'none';
+          }
+
+      }
+      htmlXuat += document.querySelector('#hienthithongkemota > div:nth-child(1)').innerHTML;
+      var frequency = response.ketquathongkemota['frequency'];
+      document.getElementById('mota').click();
+      for (let bien in frequency) {
+        let result = frequency[bien];
+        var canvas = document.createElement('canvas');
+        canvas.setAttribute('id', `${bien}bar`);
+        canvas.style.display = 'none';
+        canvas.style.width = '200px';
+        var div = document.getElementById('hienthithongkemota');
+        div.appendChild(canvas);
+        var ctx = document.getElementById(`${bien}bar`).getContext('2d');
+        var barChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: result['Outcome'],
+                datasets: [{
+                    label: `Tần số của ${bien}`,
+                    data: result['Count'],
+                    backgroundColor: ['rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)', '#decade', '#a9e5bb', '#a2add0'], // Màu nền của cột
+                    borderColor: ['rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)', '#decade', '#a9e5bb', '#a2add0'], // Màu viền của cột
+                    borderWidth: 1 // Độ dày viền của cột
+                }]
+            },
+            options: {
+                responsive: true, // Biểu đồ tự điều chỉnh kích thước
+                scales: {
+                    y: {
+                        beginAtZero: true // Đặt giá trị trục y bắt đầu từ 0
+                    }
+                }
+            }
+        });
+        var canvas2 = document.createElement('canvas');
+        canvas2.setAttribute('id', `${bien}pie`);
+        canvas2.style.display = 'none';
+        canvas2.style.width = '200px';
+        var div = document.getElementById('hienthithongkemota');
+        div.appendChild(canvas2);
+        var ctx = document.getElementById(`${bien}pie`).getContext('2d');
+        var pieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: result['Outcome'],
+                datasets: [{
+                    label: `Phần trăm của ${bien}`,
+                    data: result['Percent'],
+                    backgroundColor: ['rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)', '#decade', '#a9e5bb', '#a2add0'], // Màu nền của các phần
+                    borderColor: 'white', // Màu viền của các phần
+                    borderWidth: 1 // Độ dày viền của các phần
+                }]
+            },
+            options: {
+                responsive: true // Biểu đồ tự điều chỉnh kích thước
+            }
+        });
+      }
+      setTimeout(bieudo, 1000);
+      function bieudo() {
+            for (let bien in frequency) {
+            document.getElementById('ten_bien').innerHTML = bien;
+            let result = frequency[bien];
+            let html = '';
+            for (let i=0; i < result['Outcome'].length; i++) {
+                html += `
+                    <tr>
+                        <th>${result['Outcome'][i]}</th>
+                        <td>${result['Count'][i]}</td>
+                        <td>${result['Percent'][i]}</td
+                    </tr>
+                `;
+            }
+            document.getElementById('bodytanso').innerHTML = html;
+            htmlXuat += document.querySelector('#hienthithongkemota > div:nth-child(2)').innerHTML;
+            var dataURL = document.getElementById(`${bien}bar`).toDataURL();
+            var image = "<img width='475' height='300' src='" + dataURL + "'/>";
+            htmlXuat += image;
+            dataURL = document.getElementById(`${bien}pie`).toDataURL();
+            image = "<img width='300' height='300' src='" + dataURL + "'/>";
+            htmlXuat += image;
+          }
+        xuatKetQua(css, htmlXuat);
+      }
+
+    },
+    error: function(error) {
+      console.log(error);
+    }
+  });
 }
