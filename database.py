@@ -1,9 +1,9 @@
 import mysql.connector as connector
 import csv
 
-mydb = connector.connect(user='i1s5q3ljrbli7attnf55', password='pscale_pw_EVDj52ax5SBCTp4qcsDlZsYdF740VsD4lIX9ImfKYx3',
+mydb = connector.connect(user='1xzrycsusaou89fzd6qb', password='pscale_pw_y9g8hxIaESRoNzWpu5TswthVCVYm0XUWYEM1pwjlu2k',
                          host='aws.connect.psdb.cloud',
-                         database='survey-web')
+                         database='survey-web', use_pure=True)
 mycursor = mydb.cursor()
 
 
@@ -397,7 +397,7 @@ def sang_loc(detai_id):
             results = mycursor.fetchall()
             nhomcauhoi_id_start = results[0][1]  # Lấy cái đầu tiên > nếu nhomcauhoi_id thay đổi thì thay đổi
             # nhomcauhoi_id mới
-            index = 0;
+            index = 0
             for row in results:
                 new_row = [new_detai_id]
                 if row[1] == nhomcauhoi_id_start:
