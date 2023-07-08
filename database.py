@@ -1,10 +1,10 @@
 import mysql.connector as connector
 import csv
 
-mydb = connector.connect(user='cy5bo8om6j6by8ns9jd2', password='pscale_pw_7Jy0uvFHQSAVFSd3jEnyoDmaLpBNusyjAQCWf7ONVhT',
+mydb = connector.connect(user='h0y8n8qa4ff0isebah3j', password='pscale_pw_W6a6KbVPOofdIPartHUcxQh6SMsPRlUIJMg5kCuBDvy',
                          host='aws.connect.psdb.cloud',
                          database='survey-web',
-                         ssl_ca='/etc/ssl/cert.pem')
+                         ssl_ca="/etc/ssl/cert.pem")
 mycursor = mydb.cursor()
 
 
